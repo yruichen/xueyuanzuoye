@@ -3,156 +3,443 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>训练营作业监控系统</title>
+    <title>QG AI 训练营 - 作业监控系统</title>
     <style>
         :root {
-            --primary: #4f46e5;
-            --primary-dark: #4338ca;
-            --secondary: #06b6d4;
+            /* Light Mode (默认) */
+            --qg-cyan: #00d4ff;
+            --qg-blue: #0066ff;
+            --qg-purple: #8b5cf6;
+            --qg-pink: #ec4899;
+            --qg-bg: #f8fafc;
+            --qg-surface: #ffffff;
+            --qg-border: rgba(0, 102, 255, 0.15);
+            --qg-text: #1e293b;
+            --qg-text-dim: #64748b;
+            --qg-shadow: rgba(0, 0, 0, 0.1);
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text: #1e293b;
-            --text-light: #64748b;
-            --border: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
-            --radius: 12px;
+            --card-hover-shadow: rgba(0, 102, 255, 0.15);
+            --gradient-start: rgba(0, 212, 255, 0.05);
+            --gradient-end: rgba(139, 92, 246, 0.05);
+            --bg-pattern: rgba(0, 102, 255, 0.03);
         }
+
+        [data-theme="dark"] {
+            --qg-bg: #050714;
+            --qg-surface: rgba(15, 23, 42, 0.95);
+            --qg-border: rgba(0, 212, 255, 0.3);
+            --qg-text: #e2e8f0;
+            --qg-text-dim: #94a3b8;
+            --qg-shadow: rgba(0, 0, 0, 0.5);
+            --card-hover-shadow: rgba(0, 212, 255, 0.3);
+            --gradient-start: rgba(0, 212, 255, 0.1);
+            --gradient-end: rgba(139, 92, 246, 0.1);
+            --bg-pattern: rgba(0, 212, 255, 0.03);
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--qg-bg);
+            color: var(--qg-text);
             line-height: 1.6;
+            overflow-x: hidden;
+            transition: background 0.5s ease, color 0.5s ease;
         }
+
+        /* 动态背景 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 50%, var(--gradient-start) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, var(--gradient-end) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(0, 102, 255, 0.05) 0%, transparent 50%);
+            animation: bgPulse 15s ease-in-out infinite alternate;
+            z-index: -1;
+            transition: opacity 0.5s ease;
+        }
+
+        @keyframes bgPulse {
+            0% { opacity: 0.5; transform: scale(1); }
+            100% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        /* 网格背景 */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(var(--bg-pattern) 1px, transparent 1px),
+                linear-gradient(90deg, var(--bg-pattern) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+            transition: opacity 0.5s ease;
+        }
+
         .container {
             max-width: 1600px;
             margin: 0 auto;
             padding: 24px;
         }
 
-        /* Header */
+        /* Header - 紧凑设计 */
         .header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-            padding: 32px;
-            border-radius: var(--radius);
-            margin-bottom: 32px;
-            box-shadow: var(--shadow-lg);
-        }
-        .header h1 {
-            font-size: 32px;
-            margin-bottom: 8px;
-            font-weight: 700;
-        }
-        .header p {
-            opacity: 0.9;
-            font-size: 16px;
+            background: linear-gradient(135deg, var(--qg-blue) 0%, var(--qg-cyan) 50%, var(--qg-purple) 100%);
+            padding: 32px 40px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px var(--qg-shadow);
         }
 
-        /* Stats Bar */
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+            animation: headerGlow 8s ease-in-out infinite;
+        }
+
+        @keyframes headerGlow {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-20px, 20px) scale(1.1); }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand-logo {
+            font-size: 40px;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.5));
+            animation: logoPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes logoPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .brand-text h1 {
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+            letter-spacing: -0.5px;
+        }
+
+        .brand-text .subtitle {
+            font-size: 13px;
+            opacity: 0.9;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            margin-top: 4px;
+        }
+
+        /* Theme Toggle - 带动效 */
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .theme-toggle:hover::before {
+            width: 200px;
+            height: 200px;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .theme-icon {
+            font-size: 18px;
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            z-index: 1;
+        }
+
+        .theme-toggle:hover .theme-icon {
+            transform: rotate(180deg) scale(1.1);
+        }
+
+        .theme-text {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Stats - 重要性分级 */
         .stats-bar {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: 2fr 1.5fr 1.5fr 1fr;
             gap: 16px;
             margin-bottom: 24px;
         }
+
         .stat-card {
-            background: var(--surface);
-            padding: 20px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            transition: transform 0.2s;
+            background: var(--qg-surface);
+            border: 1px solid var(--qg-border);
+            padding: 20px 24px;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px var(--qg-shadow);
         }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--qg-cyan) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
         .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+            border-color: var(--qg-cyan);
+            box-shadow: 0 8px 24px var(--card-hover-shadow);
         }
+
+        .stat-card:hover::before {
+            opacity: 0.05;
+        }
+
+        .stat-content {
+            position: relative;
+            z-index: 1;
+        }
+
         .stat-label {
-            color: var(--text-light);
-            font-size: 14px;
+            color: var(--qg-text-dim);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             margin-bottom: 8px;
         }
+
         .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--primary);
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--qg-cyan), var(--qg-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-card:first-child .stat-value {
+            font-size: 42px;
         }
 
         /* Toolbar */
         .toolbar {
-            background: var(--surface);
-            padding: 20px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
+            background: var(--qg-surface);
+            border: 1px solid var(--qg-border);
+            padding: 16px 20px;
+            border-radius: 16px;
             margin-bottom: 24px;
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
             align-items: center;
             justify-content: space-between;
+            box-shadow: 0 2px 8px var(--qg-shadow);
         }
-        .toolbar-left, .toolbar-right {
+
+        .toolbar-section {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
             align-items: center;
+        }
+
+        /* View Switcher - 3D效果 */
+        .view-switcher {
+            display: flex;
+            gap: 0;
+            background: var(--qg-bg);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--qg-border);
+            position: relative;
+        }
+
+        .view-switcher::before {
+            content: '';
+            position: absolute;
+            width: calc(50% - 4px);
+            height: calc(100% - 8px);
+            background: linear-gradient(135deg, var(--qg-cyan), var(--qg-blue));
+            border-radius: 8px;
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 0;
+            top: 4px;
+            left: 4px;
+            box-shadow: 0 2px 8px rgba(0, 102, 255, 0.3);
+        }
+
+        .view-switcher.table-active::before {
+            transform: translateX(calc(100% + 4px));
+        }
+
+        .view-btn {
+            padding: 8px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--qg-text-dim);
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .view-btn.active {
+            color: white;
         }
 
         /* Buttons */
         .btn {
             padding: 10px 20px;
             border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
         }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
+
         .btn-primary {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--qg-blue), var(--qg-cyan));
             color: white;
+            box-shadow: 0 2px 12px rgba(0, 102, 255, 0.3);
         }
+
         .btn-primary:hover:not(:disabled) {
-            background: var(--primary-dark);
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 102, 255, 0.4);
         }
+
         .btn-secondary {
-            background: var(--secondary);
+            background: linear-gradient(135deg, var(--qg-purple), var(--qg-pink));
             color: white;
+            box-shadow: 0 2px 12px rgba(139, 92, 246, 0.3);
         }
-        .btn-secondary:hover:not(:disabled) {
-            background: #0891b2;
-        }
+
         .btn-success {
-            background: var(--success);
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
         }
+
         .btn-ghost {
             background: transparent;
-            color: var(--text);
-            border: 2px solid var(--border);
+            color: var(--qg-text);
+            border: 2px solid var(--qg-border);
         }
+
         .btn-ghost:hover {
-            border-color: var(--primary);
-            color: var(--primary);
+            border-color: var(--qg-cyan);
+            color: var(--qg-cyan);
+            box-shadow: 0 0 16px rgba(0, 212, 255, 0.2);
         }
+
         .btn-danger {
-            background: var(--danger);
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
         }
+
         .btn-sm {
-            padding: 6px 12px;
+            padding: 6px 14px;
             font-size: 12px;
         }
 
@@ -162,18 +449,28 @@
             align-items: center;
             gap: 10px;
         }
+
+        .toggle-wrapper span {
+            font-size: 12px;
+            color: var(--qg-text-dim);
+        }
+
         .toggle {
             position: relative;
             width: 48px;
             height: 24px;
-            background: var(--border);
+            background: var(--qg-bg);
+            border: 1px solid var(--qg-border);
             border-radius: 12px;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s;
         }
+
         .toggle.active {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--qg-cyan), var(--qg-blue));
+            box-shadow: 0 0 16px rgba(0, 212, 255, 0.4);
         }
+
         .toggle-thumb {
             position: absolute;
             top: 2px;
@@ -182,302 +479,433 @@
             height: 20px;
             background: white;
             border-radius: 50%;
-            transition: left 0.3s;
-        }
-        .toggle.active .toggle-thumb {
-            left: 26px;
+            transition: left 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
-        /* View Switcher */
-        .view-switcher {
-            display: flex;
-            gap: 4px;
-            background: var(--border);
-            padding: 4px;
-            border-radius: 8px;
-        }
-        .view-btn {
-            padding: 6px 12px;
-            border: none;
-            background: transparent;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-light);
-            transition: all 0.2s;
-        }
-        .view-btn.active {
-            background: white;
-            color: var(--primary);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .toggle.active .toggle-thumb {
+            left: 26px;
         }
 
         /* Main Content */
         .main-content {
             display: grid;
-            grid-template-columns: 1fr 400px;
+            grid-template-columns: 1fr 380px;
             gap: 24px;
         }
 
-        /* Card */
         .card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
+            background: var(--qg-surface);
+            border: 1px solid var(--qg-border);
+            border-radius: 18px;
             overflow: hidden;
-        }
-        .card-header {
-            padding: 20px;
-            border-bottom: 2px solid var(--border);
-            font-weight: 700;
-            font-size: 18px;
-        }
-        .card-body {
-            padding: 20px;
+            box-shadow: 0 2px 12px var(--qg-shadow);
+            transition: box-shadow 0.3s;
         }
 
-        /* Student Cards View */
+        .card:hover {
+            box-shadow: 0 4px 20px var(--qg-shadow);
+        }
+
+        .card-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--qg-border);
+            font-weight: 800;
+            font-size: 16px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* Sidebar Cards - 紧凑化 */
+        .sidebar-card {
+            margin-bottom: 16px;
+        }
+
+        .sidebar-card .card-header {
+            padding: 14px 18px;
+            font-size: 14px;
+        }
+
+        .sidebar-card .card-body {
+            padding: 18px;
+        }
+
+        /* View Container - 3D Flip */
+        .view-container {
+            perspective: 2000px;
+            min-height: 500px;
+        }
+
+        .view-wrapper {
+            position: relative;
+            width: 100%;
+            transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transform-style: preserve-3d;
+        }
+
+        .view-wrapper.flipping {
+            transform: rotateY(180deg);
+        }
+
+        .students-grid, .table-view {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .table-view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            transform: rotateY(180deg);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .view-wrapper.flipping .table-view {
+            opacity: 1;
+        }
+
+        .view-wrapper.flipping .students-grid {
+            opacity: 0;
+        }
+
+        /* Student Cards */
         .students-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
             gap: 20px;
         }
+
         .student-card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
+            background: var(--qg-surface);
+            border: 1px solid var(--qg-border);
+            border-radius: 14px;
             padding: 20px;
-            transition: all 0.3s;
-            border: 2px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
         }
+
+        .student-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--gradient-start), transparent);
+            transition: left 0.6s;
+        }
+
+        .student-card:hover::before {
+            left: 100%;
+        }
+
         .student-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
-            border-color: var(--primary);
+            transform: translateY(-6px);
+            border-color: var(--qg-cyan);
+            box-shadow: 0 12px 32px var(--card-hover-shadow);
         }
+
         .student-card.updated {
-            border-left: 4px solid var(--warning);
-            background: linear-gradient(to right, #fef3c7 0%, var(--surface) 20%);
+            border-left: 3px solid var(--warning);
+            animation: pulseWarning 2s ease-in-out infinite;
         }
+
+        @keyframes pulseWarning {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            50% { box-shadow: 0 0 20px 5px rgba(245, 158, 11, 0.2); }
+        }
+
         .student-card-header {
             display: flex;
             justify-content: space-between;
             align-items: start;
             margin-bottom: 16px;
         }
+
         .student-name {
             font-size: 20px;
-            font-weight: 700;
-            color: var(--text);
-            margin-bottom: 4px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--qg-cyan), var(--qg-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 6px;
         }
+
         .student-repo-link {
-            font-size: 13px;
-            color: var(--primary);
+            font-size: 12px;
+            color: var(--qg-cyan);
             text-decoration: none;
             display: flex;
             align-items: center;
             gap: 4px;
-            word-break: break-all;
+            transition: all 0.3s;
         }
+
         .student-repo-link:hover {
-            text-decoration: underline;
+            color: var(--qg-blue);
+            transform: translateX(4px);
         }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
         .student-meta {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
             margin-bottom: 16px;
             padding: 12px;
-            background: #f8fafc;
-            border-radius: 8px;
+            background: var(--qg-bg);
+            border-radius: 10px;
+            border: 1px solid var(--qg-border);
         }
+
         .meta-item {
             font-size: 12px;
         }
+
         .meta-label {
-            color: var(--text-light);
+            color: var(--qg-text-dim);
             margin-bottom: 4px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
+
         .meta-value {
-            color: var(--text);
-            font-weight: 600;
+            color: var(--qg-text);
+            font-weight: 700;
+            font-size: 13px;
         }
+
         .student-scores {
             margin-bottom: 16px;
         }
+
         .scores-header {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-light);
-            margin-bottom: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--qg-text-dim);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
+
+        .avg-score {
+            padding: 4px 14px;
+            background: linear-gradient(135deg, var(--qg-cyan), var(--qg-purple));
+            color: white;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 800;
+            box-shadow: 0 2px 8px rgba(0, 212, 255, 0.3);
+        }
+
         .score-items {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 8px;
         }
+
         .score-item {
             text-align: center;
         }
+
         .score-item-label {
-            font-size: 11px;
-            color: var(--text-light);
+            font-size: 10px;
+            color: var(--qg-text-dim);
             margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
+
         .score-item-input {
             width: 100%;
             padding: 8px 4px;
-            border: 2px solid var(--border);
-            border-radius: 6px;
+            border: 2px solid var(--qg-border);
+            border-radius: 8px;
             text-align: center;
             font-size: 14px;
-            font-weight: 700;
-            transition: all 0.2s;
+            font-weight: 800;
+            background: var(--qg-bg);
+            color: var(--qg-cyan);
+            transition: all 0.3s;
         }
+
         .score-item-input:focus {
             outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            border-color: var(--qg-cyan);
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.3);
+            transform: scale(1.05);
         }
+
         .score-item-input.changed {
             border-color: var(--warning);
-            background: #fef3c7;
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            animation: scoreChange 0.5s ease-out;
         }
-        .avg-score {
-            display: inline-block;
-            padding: 4px 12px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 700;
-            margin-left: 8px;
+
+        @keyframes scoreChange {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
+
         .student-actions {
             display: flex;
             gap: 8px;
             justify-content: flex-end;
         }
 
-        /* Table View (Compact) */
-        .table-view {
-            display: none;
-        }
-        .table-view.active {
-            display: block;
-        }
+        /* Table View */
         .table-container {
             overflow-x: auto;
-            max-height: 70vh;
-            position: relative;
+            max-height: 65vh;
+            border-radius: 10px;
         }
+
         table {
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
         }
+
         thead {
             position: sticky;
             top: 0;
             z-index: 10;
-            background: #f8fafc;
+            background: var(--qg-surface);
         }
+
         th {
-            padding: 14px 12px;
+            padding: 12px;
             text-align: left;
-            font-weight: 600;
-            font-size: 13px;
-            color: var(--text-light);
+            font-weight: 700;
+            font-size: 11px;
+            color: var(--qg-cyan);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            border-bottom: 2px solid var(--border);
+            border-bottom: 2px solid var(--qg-border);
             white-space: nowrap;
         }
+
         th:first-child {
             position: sticky;
             left: 0;
             z-index: 11;
-            background: #f8fafc;
+            background: var(--qg-surface);
         }
+
         td {
             padding: 12px;
-            border-bottom: 1px solid var(--border);
-            font-size: 13px;
+            border-bottom: 1px solid var(--qg-border);
+            font-size: 12px;
         }
+
         td:first-child {
             position: sticky;
             left: 0;
-            background: var(--surface);
+            background: var(--qg-surface);
             font-weight: 700;
             z-index: 1;
         }
-        tr.updated td:first-child {
-            background: #fef3c7;
-        }
+
         tr:hover td {
-            background: #f1f5f9;
-        }
-        tr.updated:hover td {
-            background: #fef3c7;
+            background: var(--qg-bg);
         }
 
-        /* Score Input Table */
-        .table-score-inputs {
-            display: flex;
-            gap: 6px;
+        tr.updated td:first-child {
+            border-left: 3px solid var(--warning);
         }
+
         .table-score-input {
-            width: 50px;
-            padding: 4px;
-            border: 2px solid var(--border);
-            border-radius: 4px;
+            width: 55px;
+            padding: 5px;
+            border: 2px solid var(--qg-border);
+            border-radius: 6px;
             text-align: center;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
+            background: var(--qg-bg);
+            color: var(--qg-cyan);
         }
+
         .table-score-input:focus {
             outline: none;
-            border-color: var(--primary);
-        }
-        .table-score-input.changed {
-            border-color: var(--warning);
-            background: #fef3c7;
+            border-color: var(--qg-cyan);
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
         }
 
         /* Form */
         .form-group {
             margin-bottom: 16px;
         }
+
         .form-label {
             display: block;
             margin-bottom: 6px;
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--text);
+            font-weight: 700;
+            font-size: 12px;
+            color: var(--qg-text);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
+
         .form-input, .form-textarea {
             width: 100%;
-            padding: 10px 12px;
-            border: 2px solid var(--border);
+            padding: 10px 14px;
+            border: 2px solid var(--qg-border);
             border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.2s;
+            font-size: 13px;
+            background: var(--qg-bg);
+            color: var(--qg-text);
+            transition: all 0.3s;
         }
+
         .form-input:focus, .form-textarea:focus {
             outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            border-color: var(--qg-cyan);
+            box-shadow: 0 0 16px rgba(0, 212, 255, 0.2);
         }
+
         .form-textarea {
             resize: vertical;
             min-height: 100px;
             font-family: inherit;
         }
+
         .form-hint {
-            font-size: 12px;
-            color: var(--text-light);
+            font-size: 11px;
+            color: var(--qg-text-dim);
             margin-top: 4px;
         }
 
@@ -485,35 +913,51 @@
         .status-msg {
             padding: 12px 16px;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 12px;
             margin-top: 12px;
             display: none;
+            border: 1px solid;
+            font-weight: 600;
         }
+
         .status-msg.show {
             display: block;
+            animation: slideIn 0.3s ease-out;
         }
+
+        @keyframes slideIn {
+            from { transform: translateY(-8px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
         .status-msg.success {
-            background: #d1fae5;
-            color: #065f46;
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border-color: rgba(16, 185, 129, 0.3);
         }
+
         .status-msg.error {
-            background: #fee2e2;
-            color: #991b1b;
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.3);
         }
+
         .status-msg.info {
-            background: #dbeafe;
-            color: #1e40af;
+            background: rgba(0, 212, 255, 0.15);
+            color: var(--qg-cyan);
+            border-color: rgba(0, 212, 255, 0.3);
         }
 
         /* Loading Spinner */
         .spinner {
-            border: 3px solid var(--border);
-            border-top-color: var(--primary);
+            border: 3px solid var(--qg-border);
+            border-top-color: var(--qg-cyan);
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             animation: spin 0.8s linear infinite;
         }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
@@ -522,27 +966,82 @@
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: var(--text-light);
+            color: var(--qg-text-dim);
         }
+
         .empty-state-icon {
             font-size: 64px;
             margin-bottom: 16px;
             opacity: 0.5;
+            animation: float 3s ease-in-out infinite;
         }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
         .empty-state-text {
             font-size: 18px;
+            font-weight: 700;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--qg-surface);
+            border: 1px solid var(--qg-border);
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px var(--qg-shadow);
+            z-index: 1000;
+            display: none;
+            animation: toastIn 0.3s ease-out;
+        }
+
+        @keyframes toastIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast.show {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toast-icon {
+            font-size: 20px;
+        }
+
+        .toast-message {
+            font-size: 14px;
             font-weight: 600;
+            color: var(--qg-text);
+        }
+
+        /* Shortcuts Hint */
+        .shortcuts-hint {
+            font-size: 11px;
+            color: var(--qg-text-dim);
+            text-align: center;
+            padding: 8px;
+            border-top: 1px solid var(--qg-border);
+            margin-top: 12px;
         }
 
         /* Responsive */
-        @media (max-width: 1024px) {
+        @media (max-width: 1400px) {
             .main-content {
                 grid-template-columns: 1fr;
             }
-            .students-grid {
-                grid-template-columns: 1fr;
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
+
         @media (max-width: 768px) {
             .container {
                 padding: 16px;
@@ -550,89 +1049,121 @@
             .header {
                 padding: 24px;
             }
-            .header h1 {
+            .header-content {
+                flex-direction: column;
+                gap: 16px;
+            }
+            .brand-logo {
+                font-size: 32px;
+            }
+            .brand-text h1 {
                 font-size: 24px;
             }
-            .toolbar {
-                flex-direction: column;
-                align-items: stretch;
+            .stats-bar {
+                grid-template-columns: 1fr;
             }
-            .toolbar-left, .toolbar-right {
-                width: 100%;
-                justify-content: space-between;
+            .students-grid {
+                grid-template-columns: 1fr;
             }
             .score-items {
                 grid-template-columns: repeat(3, 1fr);
             }
+            .toolbar {
+                flex-direction: column;
+            }
+            .toolbar-section {
+                width: 100%;
+                justify-content: space-between;
+            }
         }
 
-        /* Link */
-        a {
-            color: var(--primary);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        a:hover {
-            color: var(--primary-dark);
-            text-decoration: underline;
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
 
-        /* Action Buttons */
-        .action-btns {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
+        ::-webkit-scrollbar-track {
+            background: var(--qg-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--qg-border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--qg-cyan);
         }
     </style>
 </head>
 <body>
 <div class="container">
     <header class="header">
-        <h1>🎓 训练营作业监控系统</h1>
-        <p>实时跟踪学员仓库更新状态，支持多阶段评分管理</p>
+        <div class="header-content">
+            <div class="brand">
+                <div class="brand-logo">🤖</div>
+                <div class="brand-text">
+                    <h1>QG AI 训练营</h1>
+                    <div class="subtitle">HOMEWORK MONITORING SYSTEM</div>
+                </div>
+            </div>
+            <div class="theme-toggle" id="themeToggle">
+                <span class="theme-icon">☀️</span>
+                <span class="theme-text">明亮模式</span>
+            </div>
+        </div>
     </header>
 
     <div class="stats-bar">
         <div class="stat-card">
-            <div class="stat-label">总学员数</div>
-            <div class="stat-value" id="totalCount">0</div>
+            <div class="stat-content">
+                <div class="stat-label">📚 学员总数</div>
+                <div class="stat-value" id="totalCount">0</div>
+            </div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">已更新作业</div>
-            <div class="stat-value" id="updatedCount" style="color: var(--warning);">0</div>
+            <div class="stat-content">
+                <div class="stat-label">🔔 已更新</div>
+                <div class="stat-value" id="updatedCount" style="background: linear-gradient(135deg, #f59e0b, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0</div>
+            </div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">平均分</div>
-            <div class="stat-value" id="avgScore" style="color: var(--success);">0</div>
+            <div class="stat-content">
+                <div class="stat-label">⭐ 平均分</div>
+                <div class="stat-value" id="avgScore" style="background: linear-gradient(135deg, #10b981, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0</div>
+            </div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">最后更新</div>
-            <div class="stat-value" id="lastLoaded" style="font-size: 16px; color: var(--text-light);">-</div>
+            <div class="stat-content">
+                <div class="stat-label">🕒 同步</div>
+                <div class="stat-value" id="lastLoaded" style="font-size: 14px;">-</div>
+            </div>
         </div>
     </div>
 
     <div class="toolbar">
-        <div class="toolbar-left">
-            <div class="view-switcher">
-                <button class="view-btn active" data-view="card">📇 卡片视图</button>
-                <button class="view-btn" data-view="table">📊 表格视图</button>
+        <div class="toolbar-section">
+            <div class="view-switcher" id="viewSwitcher">
+                <button class="view-btn active" data-view="card">📇 卡片</button>
+                <button class="view-btn" data-view="table">📊 表格</button>
             </div>
             <button id="checkBtn" class="btn btn-primary">
-                <span>🔄</span> 立即检查更新
+                <span>🔄</span> 检查更新
             </button>
             <button id="exportCsvBtn" class="btn btn-secondary">
                 <span>📊</span> 导出CSV
             </button>
         </div>
-        <div class="toolbar-right">
+        <div class="toolbar-section">
             <div class="toggle-wrapper">
-                <span style="font-size: 14px; color: var(--text-light);">仅显示已更新</span>
+                <span>仅显示已更新</span>
                 <div class="toggle" id="updatedOnlyToggle">
                     <div class="toggle-thumb"></div>
                 </div>
             </div>
-            <span style="font-size: 14px; color: var(--text-light);">
-                自动刷新: <strong id="refreshLabel">60</strong>秒
+            <span style="font-size: 12px; color: var(--qg-text-dim);">
+                自动刷新: <strong id="refreshLabel" style="color: var(--qg-cyan);">60</strong>s
             </span>
         </div>
     </div>
@@ -640,90 +1171,93 @@
     <div class="main-content">
         <div class="card">
             <div class="card-header">📋 学员作业列表</div>
-            <div class="card-body" id="studentsContainer">
-                <!-- Card View -->
-                <div class="students-grid" id="cardView">
-                    <!-- Dynamic content -->
-                </div>
-
-                <!-- Table View -->
-                <div class="table-view" id="tableView">
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>姓名</th>
-                                    <th>状态</th>
-                                    <th>最后更新</th>
-                                    <th>最后查看</th>
-                                    <th>阶段1</th>
-                                    <th>阶段2</th>
-                                    <th>阶段3</th>
-                                    <th>阶段4</th>
-                                    <th>阶段5</th>
-                                    <th>平均分</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Dynamic content -->
-                            </tbody>
-                        </table>
+            <div class="card-body">
+                <div class="view-container">
+                    <div class="view-wrapper" id="viewWrapper">
+                        <div class="students-grid" id="cardView"></div>
+                        <div class="table-view" id="tableView">
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>姓名</th>
+                                            <th>状态</th>
+                                            <th>最后更新</th>
+                                            <th>最后查看</th>
+                                            <th>阶段1</th>
+                                            <th>阶段2</th>
+                                            <th>阶段3</th>
+                                            <th>阶段4</th>
+                                            <th>阶段5</th>
+                                            <th>平均分</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div>
-            <div class="card" style="margin-bottom: 24px;">
+            <div class="card sidebar-card">
                 <div class="card-header">👤 学员管理</div>
                 <div class="card-body">
                     <div class="form-group">
-                        <label class="form-label">学员姓名</label>
-                        <input type="text" class="form-input" id="studentName" placeholder="例如：张三">
+                        <label class="form-label">姓名</label>
+                        <input type="text" class="form-input" id="studentName" placeholder="张三">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">仓库链接</label>
+                        <label class="form-label">仓库</label>
                         <input type="url" class="form-input" id="studentRepo" placeholder="https://github.com/user/repo">
                     </div>
                     <div style="display: flex; gap: 8px;">
-                        <button id="saveStudentBtn" class="btn btn-primary" style="flex: 1;">新增学员</button>
+                        <button id="saveStudentBtn" class="btn btn-primary" style="flex: 1;">新增</button>
                         <button id="cancelEditBtn" class="btn btn-ghost" style="display: none;">取消</button>
                     </div>
                     <div id="studentStatus" class="status-msg"></div>
+                    <div class="shortcuts-hint">💡 提示：双击学员卡片快速编辑</div>
                 </div>
             </div>
 
-            <div class="card" style="margin-bottom: 24px;">
-                <div class="card-header">⚙️ 系统设置</div>
-                <div class="card-body">
-                    <div class="form-group">
-                        <label class="form-label">前端刷新间隔（秒）</label>
-                        <input type="number" class="form-input" id="clientRefresh" min="5" max="3600" value="60">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">后台检查间隔（秒）</label>
-                        <input type="number" class="form-input" id="serverPoll" min="5" max="3600" value="300">
-                    </div>
-                    <button id="saveSettingsBtn" class="btn btn-primary" style="width: 100%;">保存设置</button>
-                    <div id="settingsStatus" class="status-msg"></div>
-                </div>
-            </div>
-
-            <div class="card">
+            <div class="card sidebar-card">
                 <div class="card-header">📥 批量导入</div>
                 <div class="card-body">
                     <div class="form-group">
-                        <label class="form-label">学员数据</label>
-                        <textarea class="form-textarea" id="importText" placeholder="支持格式：&#10;姓名,https://github.com/user/repo&#10;或直接粘贴链接（自动生成姓名）"></textarea>
-                        <div class="form-hint">每行一个学员，支持逗号/空格/Tab分隔</div>
+                        <label class="form-label">数据</label>
+                        <textarea class="form-textarea" id="importText" placeholder="姓名,链接&#10;或直接粘贴链接"></textarea>
+                        <div class="form-hint">支持逗号/空格/Tab分隔</div>
                     </div>
-                    <button id="importBtn" class="btn btn-success" style="width: 100%;">导入学员</button>
+                    <button id="importBtn" class="btn btn-success" style="width: 100%;">导入</button>
                     <div id="importStatus" class="status-msg"></div>
+                </div>
+            </div>
+
+            <div class="card sidebar-card">
+                <div class="card-header">⚙️ 设置</div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="form-label">前端刷新(秒)</label>
+                        <input type="number" class="form-input" id="clientRefresh" min="5" max="3600" value="60">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">后台检查(秒)</label>
+                        <input type="number" class="form-input" id="serverPoll" min="5" max="3600" value="300">
+                    </div>
+                    <button id="saveSettingsBtn" class="btn btn-primary" style="width: 100%;">保存</button>
+                    <div id="settingsStatus" class="status-msg"></div>
                 </div>
             </div>
         </div>
     </div>
+</div>
+
+<div class="toast" id="toast">
+    <span class="toast-icon">✓</span>
+    <span class="toast-message"></span>
 </div>
 
 <script>
@@ -746,6 +1280,61 @@ let allRows = [];
 let refreshTimer = null;
 let editingStudent = null;
 let currentView = 'card';
+let currentTheme = 'light';
+
+// Theme Toggle with Animation
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme, false);
+}
+
+function setTheme(theme, animate = true) {
+    currentTheme = theme;
+
+    if (animate) {
+        document.body.style.transition = 'none';
+        document.documentElement.setAttribute('data-theme', theme);
+        setTimeout(() => {
+            document.body.style.transition = '';
+        }, 50);
+    } else {
+        document.documentElement.setAttribute('data-theme', theme);
+    }
+
+    localStorage.setItem('theme', theme);
+
+    const themeToggle = document.getElementById('themeToggle');
+    const icon = themeToggle.querySelector('.theme-icon');
+    const text = themeToggle.querySelector('.theme-text');
+
+    if (theme === 'dark') {
+        icon.textContent = '🌙';
+        text.textContent = '深色模式';
+    } else {
+        icon.textContent = '☀️';
+        text.textContent = '明亮模式';
+    }
+}
+
+document.getElementById('themeToggle').addEventListener('click', () => {
+    setTheme(currentTheme === 'light' ? 'dark' : 'light', true);
+    showToast('主题已切换', '✨');
+});
+
+// Toast Notification
+function showToast(message, icon = '✓') {
+    const toast = document.getElementById('toast');
+    const iconEl = toast.querySelector('.toast-icon');
+    const messageEl = toast.querySelector('.toast-message');
+
+    iconEl.textContent = icon;
+    messageEl.textContent = message;
+    toast.classList.add('show');
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
 
 // Utility Functions
 function showStatus(elementId, message, type = 'info', duration = 3000) {
@@ -764,6 +1353,17 @@ function formatDate(dateStr) {
     if (!dateStr) return '-';
     try {
         const date = new Date(dateStr);
+        const now = new Date();
+        const diff = now - date;
+        const minutes = Math.floor(diff / 60000);
+        const hours = Math.floor(diff / 3600000);
+        const days = Math.floor(diff / 86400000);
+
+        if (minutes < 1) return '刚刚';
+        if (minutes < 60) return `${minutes}分钟前`;
+        if (hours < 24) return `${hours}小时前`;
+        if (days < 7) return `${days}天前`;
+
         return date.toLocaleString('zh-CN', {
             month: '2-digit',
             day: '2-digit',
@@ -794,6 +1394,7 @@ async function fetchList() {
         updateStats();
     } catch (e) {
         console.error('Failed to load data:', e);
+        showToast('数据加载失败', '❌');
     }
 }
 
@@ -805,7 +1406,11 @@ function updateStats() {
     document.getElementById('totalCount').textContent = total;
     document.getElementById('updatedCount').textContent = updated;
     document.getElementById('avgScore').textContent = avgScore;
-    document.getElementById('lastLoaded').textContent = new Date().toLocaleTimeString('zh-CN');
+    document.getElementById('lastLoaded').textContent = new Date().toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
 }
 
 function renderView() {
@@ -840,6 +1445,12 @@ function renderCardView() {
         const card = document.createElement('div');
         card.className = `student-card ${row.updated_since_view ? 'updated' : ''}`;
 
+        // 双击编辑
+        card.addEventListener('dblclick', () => {
+            editStudent(row.name);
+            showToast('进入编辑模式', '✏️');
+        });
+
         const statusBadge = row.updated_since_view
             ? '<span class="badge badge-warning">📌 已更新</span>'
             : '<span class="badge badge-success">✓ 无更新</span>';
@@ -852,7 +1463,8 @@ function renderCardView() {
                     data-phase="${index}"
                     value="${score}"
                     min="0" max="100"
-                    onchange="handleScoreChange(this)">
+                    onchange="handleScoreChange(this)"
+                    title="按Enter保存">
             </div>
         `).join('');
 
@@ -860,7 +1472,7 @@ function renderCardView() {
             <div class="student-card-header">
                 <div>
                     <div class="student-name">${row.name || '-'}</div>
-                    <a href="${row.repo}" target="_blank" class="student-repo-link">
+                    <a href="${row.repo}" target="_blank" class="student-repo-link" onclick="event.stopPropagation()">
                         🔗 ${truncateUrl(row.repo)}
                     </a>
                 </div>
@@ -889,13 +1501,13 @@ function renderCardView() {
             </div>
 
             <div class="student-actions">
-                <button class="btn btn-sm btn-primary" onclick="markViewed('${row.name}', '${row.repo}')">
+                <button class="btn btn-sm btn-primary" onclick="markViewed('${row.name}', '${row.repo}'); event.stopPropagation()">
                     👁️ 查看
                 </button>
-                <button class="btn btn-sm btn-ghost" onclick="editStudent('${row.name}')">
+                <button class="btn btn-sm btn-ghost" onclick="editStudent('${row.name}'); event.stopPropagation()">
                     ✏️ 编辑
                 </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteStudent('${row.name}')">
+                <button class="btn btn-sm btn-danger" onclick="deleteStudent('${row.name}'); event.stopPropagation()">
                     🗑️ 删除
                 </button>
             </div>
@@ -915,7 +1527,7 @@ function renderTableView() {
     if (filteredRows.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="11" style="text-align: center; padding: 40px; color: var(--text-light);">
+                <td colspan="11" style="text-align: center; padding: 40px; color: var(--qg-text-dim);">
                     暂无学员数据
                 </td>
             </tr>
@@ -931,15 +1543,6 @@ function renderTableView() {
         const statusBadge = row.updated_since_view
             ? '<span class="badge badge-warning">📌 已更新</span>'
             : '<span class="badge badge-success">✓ 无更新</span>';
-
-        const scoreInputsHtml = scores.map((score, index) => `
-            <input type="number" class="table-score-input"
-                data-name="${row.name}"
-                data-phase="${index}"
-                value="${score}"
-                min="0" max="100"
-                onchange="handleScoreChange(this)">
-        `).join('');
 
         tr.innerHTML = `
             <td><strong>${row.name || '-'}</strong></td>
@@ -958,10 +1561,10 @@ function renderTableView() {
             `).join('')}
             <td><strong>${(row.avg_score || 0).toFixed(1)}</strong></td>
             <td>
-                <div class="action-btns">
-                    <button class="btn btn-sm btn-primary" onclick="markViewed('${row.name}', '${row.repo}')">👁️</button>
-                    <button class="btn btn-sm btn-ghost" onclick="editStudent('${row.name}')">✏️</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteStudent('${row.name}')">🗑️</button>
+                <div style="display: flex; gap: 4px;">
+                    <button class="btn btn-sm btn-primary" onclick="markViewed('${row.name}', '${row.repo}')" title="查看仓库">👁️</button>
+                    <button class="btn btn-sm btn-ghost" onclick="editStudent('${row.name}')" title="编辑">✏️</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteStudent('${row.name}')" title="删除">🗑️</button>
                 </div>
             </td>
         `;
@@ -993,13 +1596,13 @@ async function handleScoreChange(input) {
                 row.avg_score = row.scores.reduce((a, b) => a + b, 0) / 5;
                 updateStats();
             }
-            showStatus('settingsStatus', `✓ ${name} 的${PHASE_LABELS[phase]}评分已保存`, 'success', 2000);
+            showToast(`${name} ${PHASE_LABELS[phase]} 已保存`, '✓');
         } else {
             throw new Error('Save failed');
         }
     } catch (e) {
         input.classList.add('changed');
-        showStatus('settingsStatus', `✗ 评分保存失败`, 'error', 3000);
+        showToast('保存失败', '❌');
     }
 }
 
@@ -1011,20 +1614,22 @@ function editStudent(name) {
     editingStudent = name;
     document.getElementById('studentName').value = student.name;
     document.getElementById('studentRepo').value = student.repo;
-    document.getElementById('saveStudentBtn').textContent = '更新学员';
+    document.getElementById('saveStudentBtn').textContent = '更新';
     document.getElementById('cancelEditBtn').style.display = 'block';
 
-    // Scroll to form
-    document.querySelector('.main-content > div:last-child').scrollIntoView({ behavior: 'smooth' });
+    document.querySelector('.main-content > div:last-child').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+    });
 }
 
 function cancelEdit() {
     editingStudent = null;
     document.getElementById('studentName').value = '';
     document.getElementById('studentRepo').value = '';
-    document.getElementById('saveStudentBtn').textContent = '新增学员';
+    document.getElementById('saveStudentBtn').textContent = '新增';
     document.getElementById('cancelEditBtn').style.display = 'none';
-    showStatus('studentStatus', '已取消编辑', 'info', 2000);
+    showToast('已取消编辑', 'ℹ️');
 }
 
 async function saveStudent() {
@@ -1050,7 +1655,7 @@ async function saveStudent() {
 
         const data = await res.json();
         if (res.ok && data.ok) {
-            showStatus('studentStatus', editingStudent ? '✓ 学员信息已更新' : '✓ 学员已添加', 'success');
+            showToast(editingStudent ? '学员信息已更新' : '学员已添加', '✓');
             cancelEdit();
             await fetchList();
         } else {
@@ -1076,14 +1681,14 @@ async function deleteStudent(name) {
 
         const data = await res.json();
         if (res.ok && data.ok) {
-            showStatus('studentStatus', '✓ 学员已删除', 'success');
+            showToast('学员已删除', '✓');
             if (editingStudent === name) cancelEdit();
             await fetchList();
         } else {
-            showStatus('studentStatus', '删除失败', 'error');
+            showToast('删除失败', '❌');
         }
     } catch (e) {
-        showStatus('studentStatus', '网络错误', 'error');
+        showToast('网络错误', '❌');
     }
 }
 
@@ -1097,6 +1702,7 @@ async function markViewed(name, repo) {
             body: JSON.stringify({ name })
         });
         await fetchList();
+        showToast(`已标记 ${name} 为已查看`, '✓');
     } catch (e) {
         console.error('Failed to mark as viewed:', e);
     }
@@ -1110,11 +1716,13 @@ async function checkNow() {
     try {
         await fetch(API.CHECK, { method: 'POST' });
         await fetchList();
+        showToast('检查完成', '✓');
     } catch (e) {
         console.error('Check failed:', e);
+        showToast('检查失败', '❌');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<span>🔄</span> 立即检查更新';
+        btn.innerHTML = '<span>🔄</span> 检查更新';
     }
 }
 
@@ -1133,9 +1741,9 @@ async function exportCsv() {
         a.remove();
         window.URL.revokeObjectURL(url);
 
-        showStatus('settingsStatus', '✓ CSV已导出', 'success', 2000);
+        showToast('CSV已导出', '📊');
     } catch (e) {
-        showStatus('settingsStatus', '✗ 导出失败', 'error');
+        showToast('导出失败', '❌');
     }
 }
 
@@ -1155,9 +1763,7 @@ async function importStudents() {
 
         const data = await res.json();
         if (res.ok && data.ok) {
-            showStatus('importStatus',
-                `✓ 导入完成：新增 ${data.added} 个，更新 ${data.updated} 个，跳过 ${data.skipped} 个`,
-                'success');
+            showToast(`导入完成：新增${data.added}个，更新${data.updated}个`, '✓');
             document.getElementById('importText').value = '';
             await fetchList();
         } else {
@@ -1184,13 +1790,13 @@ async function saveSettings() {
 
         const data = await res.json();
         if (res.ok && data.ok) {
-            showStatus('settingsStatus', '✓ 设置已保存', 'success');
+            showToast('设置已保存', '✓');
             setRefreshInterval(data.settings.client_refresh_seconds);
         } else {
-            showStatus('settingsStatus', '保存失败', 'error');
+            showToast('保存失败', '❌');
         }
     } catch (e) {
-        showStatus('settingsStatus', '网络错误', 'error');
+        showToast('网络错误', '❌');
     }
 }
 
@@ -1216,20 +1822,25 @@ function setRefreshInterval(seconds) {
 document.querySelectorAll('.view-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         const view = this.dataset.view;
+        if (view === currentView) return;
+
         currentView = view;
+        const viewWrapper = document.getElementById('viewWrapper');
+        const viewSwitcher = document.getElementById('viewSwitcher');
 
         document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
 
-        if (view === 'card') {
-            document.getElementById('cardView').style.display = 'grid';
-            document.getElementById('tableView').classList.remove('active');
+        if (view === 'table') {
+            viewSwitcher.classList.add('table-active');
+            viewWrapper.classList.add('flipping');
+            renderTableView();
+            showToast('切换到表格视图', '📊');
         } else {
-            document.getElementById('cardView').style.display = 'none';
-            document.getElementById('tableView').classList.add('active');
+            viewSwitcher.classList.remove('table-active');
+            viewWrapper.classList.remove('flipping');
+            showToast('切换到卡片视图', '📇');
         }
-
-        renderView();
     });
 });
 
@@ -1244,11 +1855,34 @@ document.getElementById('importBtn').addEventListener('click', importStudents);
 document.getElementById('updatedOnlyToggle').addEventListener('click', function() {
     this.classList.toggle('active');
     renderView();
+    const isActive = this.classList.contains('active');
+    showToast(isActive ? '仅显示已更新' : '显示全部学员', 'ℹ️');
+});
+
+// Keyboard Shortcuts
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        checkNow();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+        e.preventDefault();
+        exportCsv();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+        e.preventDefault();
+        document.getElementById('themeToggle').click();
+    }
 });
 
 // Initialize
+initTheme();
 loadSettings();
 fetchList();
+
+setTimeout(() => {
+    showToast('欢迎使用 QG AI 训练营监控系统', '👋');
+}, 500);
 </script>
 </body>
 </html>
