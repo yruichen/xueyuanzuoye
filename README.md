@@ -1,49 +1,49 @@
-# Student Homework Monitor
+# 学员作业监控
 
-A small Flask dashboard that monitors student GitHub repositories and highlights updates since you last viewed them.
+一个小型的 Flask 仪表盘，用于监控学员的 GitHub 仓库，并高亮显示自上次查看以来的更新。
 
-## Features
-- Pulls `pushed_at` from GitHub and stores it locally.
-- Tracks `last_viewed_at` per student.
-- Highlights repos updated since your last view.
-- One-click open/mark-as-viewed from the dashboard.
+## 功能
+- 从 GitHub 拉取 `pushed_at` 并存储到本地。
+- 每个学员跟踪 `last_viewed_at`。
+- 高亮显示自上次查看以来更新的仓库。
+- 仪表盘支持一键打开/标记为已查看。
 
-## Project files
-- `stu_homework.py`: Flask backend and background poller.
-- `homework.html`: Frontend dashboard.
-- `students.json`: Student list (name + repo URL).
-- `state.json`: Auto-generated state store.
+## 项目文件
+- `stu_homework.py`：Flask 后端和后台轮询器。
+- `homework.html`：前端仪表盘。
+- `students.json`：学员列表（姓名 + 仓库链接）。
+- `state.json`：自动生成的状态存储。
 
-## Quick start
-1. Ensure Python 3.10+ is available.
-2. Install dependencies:
+## 快速开始
+1. 确保已安装 Python 3.10+。
+2. 安装依赖：
 
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Run the server:
+3. 运行服务器：
 
 ```bash
 python run_server.py
 ```
 
-4. Open the dashboard in your browser:
+4. 在浏览器中打开仪表盘：
 
 ```
 http://localhost:5001
 ```
 
-## Configuration
-- Optional: set a GitHub token to avoid rate limits.
+## 配置
+- 可选：设置 GitHub token 以避免速率限制。
 
 ```bash
 export GITHUB_TOKEN=your_token_here
 ```
 
-- Adjust polling interval in `stu_homework.py` via `POLL_INTERVAL`.
+- 在 `stu_homework.py` 中调整轮询间隔：`POLL_INTERVAL`。
 
-## 학생列表格式 (students.json)
+## 学员列表格式 (students.json)
 ```json
 {
   "students": [
@@ -52,9 +52,9 @@ export GITHUB_TOKEN=your_token_here
 }
 ```
 
-## Smoke check
-Run a quick API check without starting the server:
-
-```bash
-python smoke_check.py
-```
+## 前端功能
+- **新增学员**：输入姓名和仓库链接。
+- **编辑学员**：修改现有学员信息。
+- **删除学员**：移除学员。
+- **导入学员**：批量导入学员链接。
+- **参数设置**：调整自动刷新和后台检查间隔。
