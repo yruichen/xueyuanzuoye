@@ -5,7 +5,9 @@ import time
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 import requests
-from flask import Flask, jsonify, request, send_file, redirect, abort
+from flask import Flask, jsonify, request, send_file, redirect, abort, make_response
+import io
+import csv
 
 # 基本路径
 BASE_DIR = os.path.dirname(__file__)
@@ -21,7 +23,28 @@ DEFAULT_SETTINGS = {
     "client_refresh_seconds": 60,
 }
 
+# 时间阶段标签
+PHASE_LABELS = ["第一阶段", "第二阶段", "第三阶段", "第四阶段", "第五阶段"]
+
 app = Flask(__name__)
+
+
+def clamp_score(v):
+    """将分数限制在0-100之间"""
+    try:
+        i = int(v)
+    except (TypeError, ValueError):
+        return 0
+    if i < 0:
+        return 0
+    if i > 100:
+        return 100
+    return i
+
+
+def init_scores():
+    """初始化5个阶段的分数"""
+    return [0, 0, 0, 0, 0]
 
 
 def load_students():
@@ -29,8 +52,36 @@ def load_students():
         data = json.load(f)
     # 支持两种结构：{ "students": [...] } 或直接列表
     if isinstance(data, dict) and "students" in data:
-        return data["students"]
-    return data
+        students = data["students"]
+    else:
+        students = data
+    # 确保每一项都有 scores 字段（5个阶段）
+    mutated = False
+    for s in students:
+        if not isinstance(s, dict):
+            continue
+        # 迁移旧的 score 字段到 scores 数组
+        if "score" in s and "scores" not in s:
+            s["scores"] = init_scores()
+            del s["score"]
+            mutated = True
+        elif "scores" not in s:
+            s["scores"] = init_scores()
+            mutated = True
+        else:
+            # 确保 scores 是长度为5的列表
+            if not isinstance(s["scores"], list) or len(s["scores"]) != 5:
+                s["scores"] = init_scores()
+                mutated = True
+            else:
+                # 规范化每个分数
+                normalized = [clamp_score(sc) for sc in s["scores"]]
+                if normalized != s["scores"]:
+                    s["scores"] = normalized
+                    mutated = True
+    if mutated:
+        save_students(students)
+    return students
 
 
 def save_students(students):
@@ -142,6 +193,7 @@ def api_list():
     students = load_students()
     state = load_state()
     rows = []
+    students_by_name = {s.get("name"): s for s in students if s.get("name")}
     for s in students:
         name = s.get("name")
         repo = s.get("repo")
@@ -157,12 +209,23 @@ def api_list():
                     updated_since_view = datetime.fromisoformat(last_known.replace("Z", "+00:00")) > datetime.fromisoformat(last_viewed.replace("Z", "+00:00"))
                 except Exception:
                     updated_since_view = last_viewed != last_known
+        # 获取 scores（5个阶段）
+        scores = init_scores()
+        if name and name in students_by_name:
+            student_scores = students_by_name[name].get("scores", init_scores())
+            if isinstance(student_scores, list) and len(student_scores) == 5:
+                scores = [clamp_score(sc) for sc in student_scores]
+            else:
+                scores = init_scores()
+
         rows.append({
             "name": name,
             "repo": repo,
             "last_known_pushed_at": last_known,
             "last_viewed_at": last_viewed,
-            "updated_since_view": updated_since_view
+            "updated_since_view": updated_since_view,
+            "scores": scores,
+            "avg_score": sum(scores) / 5 if scores else 0
         })
     return jsonify(rows)
 
@@ -261,6 +324,12 @@ def api_students_add():
     data = request.get_json() or {}
     name = (data.get("name") or "").strip()
     repo = normalize_repo_url(data.get("repo") or "")
+    scores = data.get("scores", init_scores())
+    if not isinstance(scores, list) or len(scores) != 5:
+        scores = init_scores()
+    else:
+        scores = [clamp_score(sc) for sc in scores]
+
     if not name or not repo:
         return jsonify({"ok": False, "error": "missing name or repo"}), 400
 
@@ -270,7 +339,7 @@ def api_students_add():
     if any(s.get("repo") == repo for s in students):
         return jsonify({"ok": False, "error": "repo exists"}), 409
 
-    students.append({"name": name, "repo": repo})
+    students.append({"name": name, "repo": repo, "scores": scores})
     save_students(students)
     return jsonify({"ok": True})
 
@@ -281,6 +350,13 @@ def api_students_update():
     name = (data.get("name") or "").strip()
     repo = normalize_repo_url(data.get("repo") or "")
     old_name = (data.get("old_name") or name).strip()
+    scores_provided = "scores" in data
+    scores = data.get("scores", init_scores())
+    if not isinstance(scores, list) or len(scores) != 5:
+        scores = init_scores()
+    else:
+        scores = [clamp_score(sc) for sc in scores]
+
     if not name or not repo or not old_name:
         return jsonify({"ok": False, "error": "missing name or repo"}), 400
 
@@ -296,6 +372,8 @@ def api_students_update():
 
     target["name"] = name
     target["repo"] = repo
+    if scores_provided:
+        target["scores"] = scores
     save_students(students)
     return jsonify({"ok": True})
 
@@ -314,6 +392,71 @@ def api_students_delete():
 
     save_students(filtered)
     return jsonify({"ok": True})
+
+
+@app.route("/api/students/score", methods=["POST"])
+def api_students_score():
+    data = request.get_json() or {}
+    name = (data.get("name") or "").strip()
+    if not name:
+        return jsonify({"ok": False, "error": "missing name"}), 400
+    if "phase" not in data or "score" not in data:
+        return jsonify({"ok": False, "error": "missing phase or score"}), 400
+    try:
+        phase = int(data.get("phase"))
+        if phase < 0 or phase > 4:
+            return jsonify({"ok": False, "error": "invalid phase"}), 400
+        score = clamp_score(data.get("score"))
+    except Exception:
+        return jsonify({"ok": False, "error": "invalid phase or score"}), 400
+
+    students = load_students()
+    target = next((s for s in students if s.get("name") == name), None)
+    if not target:
+        return jsonify({"ok": False, "error": "not found"}), 404
+
+    if "scores" not in target or not isinstance(target["scores"], list) or len(target["scores"]) != 5:
+        target["scores"] = init_scores()
+
+    target["scores"][phase] = score
+    save_students(students)
+    return jsonify({"ok": True, "student": {"name": target.get("name"), "repo": target.get("repo"), "scores": target.get("scores")}})
+
+
+@app.route('/api/export/csv')
+def api_export_csv():
+    students = load_students()
+    state = load_state()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    # CSV 头部
+    header = ["姓名", "仓库链接", "最后更新时间", "最后查看时间"]
+    for label in PHASE_LABELS:
+        header.append(label)
+    header.append("平均分")
+    writer.writerow(header)
+
+    for s in students:
+        name = s.get('name', '')
+        repo = s.get('repo', '')
+        st = state.get(name, {})
+        last_known = st.get('last_known_pushed_at', '')
+        last_viewed = st.get('last_viewed_at', '')
+        scores = s.get('scores', init_scores())
+        if not isinstance(scores, list) or len(scores) != 5:
+            scores = init_scores()
+        avg = sum(scores) / 5
+
+        row = [name, repo, last_known, last_viewed] + scores + [f"{avg:.1f}"]
+        writer.writerow(row)
+
+    # 添加 UTF-8 BOM 以便 Excel 正确识别中文
+    csv_content = '\ufeff' + output.getvalue()
+    resp = make_response(csv_content.encode('utf-8'))
+    resp.headers['Content-Type'] = 'text/csv; charset=utf-8'
+    resp.headers['Content-Disposition'] = 'attachment; filename=students_scores.csv'
+    return resp
 
 
 @app.route("/view/<path:name>")
