@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>作业监控面板</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --text: #1f2430;
+            --muted: #6b7280;
+            --primary: #3b82f6;
+            --primary-strong: #2563eb;
+            --danger: #dc2626;
+            --border: #e5e7eb;
+            --shadow: 0 8px 24px rgba(31, 41, 55, 0.08);
+            --radius: 14px;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .app {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 28px 22px 36px;
+        }
+        .topbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }
+        .title {
+            margin: 0;
+            font-size: 26px;
+            letter-spacing: 0.3px;
+        }
+        .subtitle {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+        .actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .chip {
+            background: #eef2ff;
+            color: #4338ca;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 18px;
+        }
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 18px;
+            box-shadow: var(--shadow);
+        }
+        .card + .card { margin-top: 18px; }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .card h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+        .toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .stats span {
+            color: var(--text);
+            font-weight: 600;
+        }
+        .table-wrap {
+            overflow: auto;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 680px;
+            background: #fff;
+        }
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        th {
+            background: #f8fafc;
+            color: var(--muted);
+            font-weight: 600;
+        }
+        tr.updated {
+            background: #fff1f2;
+        }
+        a { color: var(--primary-strong); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge.updated { background: #fee2e2; color: var(--danger); }
+        .badge.ok { background: #ecfdf3; color: #15803d; }
+        button {
+            border: none;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            background: #e5e7eb;
+            color: #1f2937;
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+        button:hover { background: #d1d5db; }
+        button:disabled { cursor: not-allowed; opacity: 0.6; }
+        .primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        .primary:hover { background: var(--primary-strong); }
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .field label { font-size: 13px; color: var(--muted); }
+        .field input, .field textarea {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        textarea { resize: vertical; min-height: 120px; }
+        .hint { font-size: 12px; color: var(--muted); }
+        .status {
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .status.success { color: #15803d; }
+        .status.error { color: var(--danger); }
+        footer {
+            margin-top: 20px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .inline-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .ghost {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .danger {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        @media (max-width: 980px) {
+            .grid { grid-template-columns: 1fr; }
+            table { min-width: 0; }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header class="topbar">
+        <div>
+            <h1 class="title">训练营学员作业监控</h1>
+            <p class="subtitle">实时查看学员仓库更新状态，并支持批量导入和参数设置</p>
+        </div>
+        <div class="actions">
+            <button id="checkBtn" class="primary">立即检查</button>
+            <div class="chip">自动刷新 <span id="refreshLabel">60</span>s</div>
+        </div>
+    </header>
+
+    <main class="grid">
+        <section class="card">
+            <div class="card-header">
+                <h2>作业列表</h2>
+                <label class="toggle">
+                    <input type="checkbox" id="updatedOnly">
+                    仅看已更新
+                </label>
+            </div>
+            <div class="stats">
+                <div>总数 <span id="totalCount">0</span></div>
+                <div>已更新 <span id="updatedCount">0</span></div>
+                <div>最后加载 <span id="lastLoaded">-</span></div>
+            </div>
+            <div class="table-wrap">
+                <table id="table">
+                    <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>仓库</th>
+                            <th>最后更新（pushed_at）</th>
+                            <th>最后查看时间</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- dynamic -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <div>
+            <section class="card">
+                <h2>学员管理</h2>
+                <div class="field">
+                    <label for="studentNameInput">学员姓名</label>
+                    <input id="studentNameInput" type="text" placeholder="例如：张三">
+                </div>
+                <div class="field">
+                    <label for="studentRepoInput">仓库链接</label>
+                    <input id="studentRepoInput" type="url" placeholder="https://github.com/user/repo">
+                </div>
+                <div class="inline-actions">
+                    <button id="saveStudentBtn" class="primary">新增学员</button>
+                    <button id="cancelEditBtn" class="ghost" style="display:none;">取消编辑</button>
+                </div>
+                <div id="studentStatus" class="status"></div>
+            </section>
+
+            <section class="card">
+                <h2>参数设置</h2>
+                <div class="field">
+                    <label for="clientRefreshInput">自动刷新间隔（秒）</label>
+                    <input id="clientRefreshInput" type="number" min="5" max="3600" value="60">
+                </div>
+                <div class="field">
+                    <label for="serverPollInput">后台检查间隔（秒）</label>
+                    <input id="serverPollInput" type="number" min="5" max="3600" value="300">
+                </div>
+                <button id="saveSettingsBtn" class="primary">保存设置</button>
+                <div id="settingsStatus" class="status"></div>
+            </section>
+
+            <section class="card">
+                <h2>导入学员链接</h2>
+                <div class="field">
+                    <label for="importText">支持格式</label>
+                    <textarea id="importText" placeholder="姓名,https://github.com/user/repo\n或仅仓库链接"></textarea>
+                    <div class="hint">可粘贴多行：逗号/空格/制表符分隔姓名与仓库链接；仅链接会自动生成姓名</div>
+                </div>
+                <button id="importBtn">导入学员</button>
+                <div id="importStatus" class="status"></div>
+            </section>
+        </div>
+    </main>
+
+    <footer id="footerStatus"></footer>
+</div>
+
+<script>
+const API_LIST = '/api/list';
+const API_CHECK = '/api/check';
+const API_MARK = '/api/mark_viewed';
+const API_SETTINGS = '/api/settings';
+const API_IMPORT = '/api/students/import';
+const API_STUDENT_ADD = '/api/students/add';
+const API_STUDENT_UPDATE = '/api/students/update';
+const API_STUDENT_DELETE = '/api/students/delete';
+
+let allRows = [];
+let refreshTimer = null;
+let editTargetName = null;
+
+function safeText(s) { return s == null ? '' : s; }
+
+function setStatus(el, message, type) {
+    if (!el) return;
+    el.textContent = message || '';
+    el.classList.remove('success', 'error');
+    if (type) el.classList.add(type);
+}
+
+function resetStudentForm() {
+    editTargetName = null;
+    document.getElementById('studentNameInput').value = '';
+    document.getElementById('studentRepoInput').value = '';
+    document.getElementById('saveStudentBtn').textContent = '新增学员';
+    document.getElementById('cancelEditBtn').style.display = 'none';
+}
+
+function setEditMode(row) {
+    editTargetName = row.name;
+    document.getElementById('studentNameInput').value = row.name || '';
+    document.getElementById('studentRepoInput').value = row.repo || '';
+    document.getElementById('saveStudentBtn').textContent = '更新学员';
+    document.getElementById('cancelEditBtn').style.display = 'inline-flex';
+}
+
+function updateCounts(rows) {
+    const total = rows.length;
+    const updated = rows.filter(r => r.updated_since_view).length;
+    document.getElementById('totalCount').textContent = String(total);
+    document.getElementById('updatedCount').textContent = String(updated);
+    document.getElementById('lastLoaded').textContent = new Date().toLocaleTimeString();
+}
+
+function renderTable(rows) {
+    const tbody = document.querySelector('#table tbody');
+    tbody.innerHTML = '';
+    const updatedOnly = document.getElementById('updatedOnly').checked;
+    const viewRows = updatedOnly ? rows.filter(r => r.updated_since_view) : rows;
+    viewRows.forEach(r => {
+        const tr = document.createElement('tr');
+        if (r.updated_since_view) tr.classList.add('updated');
+        const statusHtml = r.updated_since_view
+            ? '<span class="badge updated">已更新</span>'
+            : '<span class="badge ok">无更新</span>';
+        tr.innerHTML = `
+            <td>${safeText(r.name)}</td>
+            <td><a href="${r.repo}" target="_blank" rel="noopener">${r.repo}</a></td>
+            <td>${safeText(r.last_known_pushed_at)}</td>
+            <td>${safeText(r.last_viewed_at)}</td>
+            <td>${statusHtml}</td>
+            <td>
+                <div class="inline-actions">
+                    <button data-name="${encodeURIComponent(r.name)}" class="viewBtn">标为已查看并跳转</button>
+                    <button data-name="${encodeURIComponent(r.name)}" class="editBtn ghost">编辑</button>
+                    <button data-name="${encodeURIComponent(r.name)}" class="deleteBtn danger">删除</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    document.querySelectorAll('.viewBtn').forEach(btn => {
+        btn.onclick = () => {
+            const nameEnc = btn.getAttribute('data-name');
+            window.open('/view/' + nameEnc, '_blank');
+            fetch(API_MARK, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name: decodeURIComponent(nameEnc)})
+            }).then(() => fetchList());
+        };
+    });
+
+    document.querySelectorAll('.editBtn').forEach(btn => {
+        btn.onclick = () => {
+            const nameEnc = btn.getAttribute('data-name');
+            const row = allRows.find(item => item.name === decodeURIComponent(nameEnc));
+            if (row) setEditMode(row);
+        };
+    });
+
+    document.querySelectorAll('.deleteBtn').forEach(btn => {
+        btn.onclick = async () => {
+            const nameEnc = btn.getAttribute('data-name');
+            const name = decodeURIComponent(nameEnc);
+            if (!confirm(`确定删除 ${name} 吗？`)) return;
+            await deleteStudent(name);
+        };
+    });
+}
+
+async function fetchList() {
+    const res = await fetch(API_LIST);
+    if (!res.ok) return;
+    const data = await res.json();
+    allRows = data || [];
+    renderTable(allRows);
+    updateCounts(allRows);
+}
+
+function setRefreshInterval(seconds) {
+    const value = Number(seconds) || 60;
+    document.getElementById('refreshLabel').textContent = String(value);
+    if (refreshTimer) clearInterval(refreshTimer);
+    refreshTimer = setInterval(fetchList, value * 1000);
+}
+
+async function fetchSettings() {
+    const res = await fetch(API_SETTINGS);
+    if (!res.ok) return;
+    const settings = await res.json();
+    document.getElementById('clientRefreshInput').value = settings.client_refresh_seconds;
+    document.getElementById('serverPollInput').value = settings.server_poll_interval_seconds;
+    setRefreshInterval(settings.client_refresh_seconds);
+}
+
+async function saveSettings() {
+    const clientRefresh = Number(document.getElementById('clientRefreshInput').value);
+    const serverPoll = Number(document.getElementById('serverPollInput').value);
+    setStatus(document.getElementById('settingsStatus'), '保存中...');
+    const res = await fetch(API_SETTINGS, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            client_refresh_seconds: clientRefresh,
+            server_poll_interval_seconds: serverPoll
+        })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.ok) {
+        setStatus(document.getElementById('settingsStatus'), '已保存', 'success');
+        setRefreshInterval(data.settings.client_refresh_seconds);
+    } else {
+        setStatus(document.getElementById('settingsStatus'), '保存失败', 'error');
+    }
+}
+
+async function importStudents() {
+    const text = document.getElementById('importText').value.trim();
+    if (!text) {
+        setStatus(document.getElementById('importStatus'), '请输入要导入的内容', 'error');
+        return;
+    }
+    setStatus(document.getElementById('importStatus'), '导入中...');
+    const res = await fetch(API_IMPORT, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({text})
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.ok) {
+        setStatus(
+            document.getElementById('importStatus'),
+            `导入完成：新增 ${data.added} 条，更新 ${data.updated} 条，忽略 ${data.skipped} 条`,
+            'success'
+        );
+        await fetchList();
+    } else {
+        setStatus(document.getElementById('importStatus'), '导入失败，请检查格式', 'error');
+    }
+}
+
+async function saveStudent() {
+    const name = document.getElementById('studentNameInput').value.trim();
+    const repo = document.getElementById('studentRepoInput').value.trim();
+    if (!name || !repo) {
+        setStatus(document.getElementById('studentStatus'), '请填写姓名和仓库链接', 'error');
+        return;
+    }
+    setStatus(document.getElementById('studentStatus'), '保存中...');
+    const endpoint = editTargetName ? API_STUDENT_UPDATE : API_STUDENT_ADD;
+    const payload = editTargetName
+        ? {name, repo, old_name: editTargetName}
+        : {name, repo};
+    const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.ok) {
+        setStatus(document.getElementById('studentStatus'), '已保存', 'success');
+        resetStudentForm();
+        await fetchList();
+    } else if (data.error === 'name exists') {
+        setStatus(document.getElementById('studentStatus'), '姓名已存在', 'error');
+    } else if (data.error === 'repo exists') {
+        setStatus(document.getElementById('studentStatus'), '仓库链接已存在', 'error');
+    } else if (data.error === 'not found') {
+        setStatus(document.getElementById('studentStatus'), '未找到该学员', 'error');
+    } else {
+        setStatus(document.getElementById('studentStatus'), '保存失败', 'error');
+    }
+}
+
+async function deleteStudent(name) {
+    setStatus(document.getElementById('studentStatus'), '删除中...');
+    const res = await fetch(API_STUDENT_DELETE, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name})
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.ok) {
+        setStatus(document.getElementById('studentStatus'), '已删除', 'success');
+        if (editTargetName === name) resetStudentForm();
+        await fetchList();
+    } else {
+        setStatus(document.getElementById('studentStatus'), '删除失败', 'error');
+    }
+}
+
+document.getElementById('checkBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('checkBtn');
+    btn.disabled = true;
+    await fetch(API_CHECK, {method: 'POST'}).catch(() => {});
+    await fetchList();
+    btn.disabled = false;
+});
+
+document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
+document.getElementById('importBtn').addEventListener('click', importStudents);
+document.getElementById('updatedOnly').addEventListener('change', () => renderTable(allRows));
+document.getElementById('saveStudentBtn').addEventListener('click', saveStudent);
+document.getElementById('cancelEditBtn').addEventListener('click', () => {
+    resetStudentForm();
+    setStatus(document.getElementById('studentStatus'), '已取消编辑');
+});
+
+fetchSettings();
+fetchList();
+resetStudentForm();
+</script>
+</body>
+</html>
+
