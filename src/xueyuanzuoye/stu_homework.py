@@ -8,13 +8,47 @@ import requests
 from flask import Flask, jsonify, request, send_file, redirect, abort, make_response
 import io
 import csv
+from pathlib import Path
 
-# 基本路径
-BASE_DIR = os.path.dirname(__file__)
-STUDENTS_FILE = os.path.join(BASE_DIR, "students.json")
-STATE_FILE = os.path.join(BASE_DIR, "state.json")
-HTML_FILE = os.path.join(BASE_DIR, "homework.html")
-SETTINGS_FILE = os.path.join(BASE_DIR, "settings.json")
+# 基本路径（兼容重构后的位置）
+# PACKAGE_DIR: package folder (e.g. .../src/xueyuanzuoye)
+PACKAGE_DIR = Path(__file__).resolve().parent
+# REPO_ROOT: two levels up from package dir (repo root)
+REPO_ROOT = PACKAGE_DIR.parents[1] if len(PACKAGE_DIR.parents) > 1 else PACKAGE_DIR
+
+def resolve_data_file(name: str) -> str:
+    """Return a sensible path for a data file (students.json/state.json/settings.json).
+    Search order:
+      1. package dir (PACKAGE_DIR/name)
+      2. repo root (REPO_ROOT/name)
+      3. repo root data/ (REPO_ROOT/data/name)
+    Returns the first existing path, otherwise returns PACKAGE_DIR/name as default.
+    """
+    candidates = [PACKAGE_DIR / name, REPO_ROOT / name, REPO_ROOT / 'data' / name]
+    for p in candidates:
+        if p.exists():
+            return str(p)
+    # default to package-local path (ensure parent exists on save)
+    return str(candidates[0])
+
+def resolve_static_file(rel: str) -> str:
+    """Resolve a static file (like 'static/homework.html') from package or repo root."""
+    cand_pkg = PACKAGE_DIR / rel
+    cand_root = REPO_ROOT / rel
+    if cand_pkg.exists():
+        return str(cand_pkg)
+    if cand_root.exists():
+        return str(cand_root)
+    return str(cand_pkg)
+
+# Flask static folder points to package static by default
+STATIC_FOLDER = str(PACKAGE_DIR / 'static')
+
+# Data files (resolved dynamically for compatibility)
+STUDENTS_FILE = resolve_data_file('students.json')
+STATE_FILE = resolve_data_file('state.json')
+HTML_FILE = resolve_static_file('static/homework.html')
+SETTINGS_FILE = resolve_data_file('settings.json')
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")  # 可选，放在环境变量中以提高配额
 POLL_INTERVAL = 300  # 5 分钟轮询一次
@@ -26,7 +60,8 @@ DEFAULT_SETTINGS = {
 # 时间阶段标签
 PHASE_LABELS = ["第一阶段", "第二阶段", "第三阶段", "第四阶段", "第五阶段"]
 
-app = Flask(__name__)
+# 将 app 初始化为使用 static 文件夹
+app = Flask(__name__, static_url_path='/static', static_folder=STATIC_FOLDER)
 
 
 def clamp_score(v):
@@ -48,8 +83,36 @@ def init_scores():
 
 
 def load_students():
-    with open(STUDENTS_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    # If the students file doesn't exist, return an empty list so module import
+    # or background threads do not crash after a layout change.
+    if not Path(STUDENTS_FILE).exists():
+        return []
+    try:
+        with open(STUDENTS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except json.JSONDecodeError as e:
+        # Backup corrupt file and create a fresh empty students file to avoid API 500s
+        try:
+            import shutil
+            ts = datetime.now().strftime('%Y%m%d-%H%M%S')
+            backup_dir = Path(REPO_ROOT) / 'backups' / f'corrupt-{ts}'
+            backup_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(STUDENTS_FILE, backup_dir / Path(STUDENTS_FILE).name)
+            # overwrite with a safe empty structure so subsequent saves work
+            p = Path(STUDENTS_FILE)
+            if not p.parent.exists():
+                p.parent.mkdir(parents=True, exist_ok=True)
+            with open(str(p), 'w', encoding='utf-8') as fw:
+                json.dump({"students": []}, fw, ensure_ascii=False, indent=2)
+            print(f"[WARN] students.json was malformed; backed up to {backup_dir} and replaced with empty students list.")
+        except Exception as e2:
+            print(f"[ERROR] failed to backup/repair malformed students file: {e2}")
+        return []
+    except Exception as e:
+        # Any other IO error - log and return empty list
+        print(f"[ERROR] failed to read students file: {e}")
+        return []
+
     # 支持两种结构：{ "students": [...] } 或直接列表
     if isinstance(data, dict) and "students" in data:
         students = data["students"]
@@ -85,7 +148,10 @@ def load_students():
 
 
 def save_students(students):
-    with open(STUDENTS_FILE, "w", encoding="utf-8") as f:
+    p = Path(STUDENTS_FILE)
+    if not p.parent.exists():
+        p.parent.mkdir(parents=True, exist_ok=True)
+    with open(str(p), "w", encoding="utf-8") as f:
         json.dump({"students": students}, f, ensure_ascii=False, indent=2)
 
 
@@ -97,7 +163,10 @@ def load_state():
 
 
 def save_state(state):
-    with open(STATE_FILE, "w", encoding="utf-8") as f:
+    p = Path(STATE_FILE)
+    if not p.parent.exists():
+        p.parent.mkdir(parents=True, exist_ok=True)
+    with open(str(p), "w", encoding="utf-8") as f:
         json.dump(state, f, ensure_ascii=False, indent=2)
 
 
@@ -128,7 +197,10 @@ def load_settings():
 
 def save_settings(settings):
     normalized = normalize_settings(settings)
-    with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+    p = Path(SETTINGS_FILE)
+    if not p.parent.exists():
+        p.parent.mkdir(parents=True, exist_ok=True)
+    with open(str(p), "w", encoding="utf-8") as f:
         json.dump(normalized, f, ensure_ascii=False, indent=2)
     return normalized
 
@@ -182,10 +254,15 @@ t.start()
 
 @app.route("/")
 def index():
-    # 直接返回静态 html 页面文件
-    if os.path.exists(HTML_FILE):
-        return send_file(HTML_FILE)
-    return "homework.html not found", 404
+    # 优先从 static 中返回 homework.html
+    try:
+        # 如果 static/homework.html 存在，直接返回
+        if os.path.exists(HTML_FILE):
+            return send_file(HTML_FILE)
+        return "homework.html not found", 404
+    except Exception as e:
+        print(f"Error serving index: {e}")
+        return "内部错误", 500
 
 
 @app.route("/api/list")

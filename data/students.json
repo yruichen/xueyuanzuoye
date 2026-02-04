@@ -1,0 +1,15 @@
+{
+  "students": [
+    {
+      "name": "测试用户",
+      "repo": "https://github.com/example/repo",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}
