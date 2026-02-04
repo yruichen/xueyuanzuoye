@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QG AI 训练营 - 作业监控系统</title>
+
+    <script>
+        (function(){
+            try {
+                var saved = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-theme', saved);
+            } catch (e) { /* ignore */ }
+        })();
+    </script>
+
+    <link rel="stylesheet" href="/static/css/styles.css">
+
+    <style>
+        html,body{height:100%;margin:0;padding:0;}
+        body{
+            font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+            background:#f8fafc;
+            color:#111;
+        }
+        [data-theme="dark"] body{
+            background:#0b1220;
+            color:#e6eef6;
+        }
+        .container{max-width:1600px;margin:0 auto;padding:24px}
+        #staticMissingHint{display:none;padding:8px 12px;border-radius:8px;background:#fff3cd;color:#856404;margin-bottom:12px;border:1px solid #ffeeba}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="staticMissingHint">提示：静态资源未找到，请检查 CSS/JS 路径。</div>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="brand">
+                <div class="brand-logo">🤖</div>
+                <div class="brand-text">
+                    <h1>QG AI 训练营</h1>
+                    <div class="subtitle">HOMEWORK MONITORING SYSTEM</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-ghost" onclick="window.location.href='/leaderboard'">
+                    🏆 排行榜
+                </button>
+                <button class="btn btn-ghost" onclick="window.location.href='/settings'">
+                    ⚙️ 设置
+                </button>
+                <div class="theme-toggle" id="themeToggle">
+                    <span class="theme-icon">☀️</span>
+                    <span class="theme-text">明亮模式</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="stat-content">
+                <div class="stat-label">📚 学员总数</div>
+                <div class="stat-value" id="totalCount">0</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-content">
+                <div class="stat-label">🔔 已更新</div>
+                <div class="stat-value" id="updatedCount" style="background: linear-gradient(135deg, #f59e0b, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-content">
+                <div class="stat-label">⭐ 平均分</div>
+                <div class="stat-value" id="avgScore" style="background: linear-gradient(135deg, #10b981, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-content">
+                <div class="stat-label">🕒 同步</div>
+                <div class="stat-value" id="lastLoaded" style="font-size: 14px;">-</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <div class="toolbar-section">
+            <div class="search-container">
+                <input type="text"
+                       id="searchInput"
+                       class="search-input"
+                       placeholder="🔍 搜索学员姓名或仓库...">
+                <button class="search-clear-btn" id="searchClearBtn" style="display: none;">✕</button>
+                <div id="searchResult" class="search-result" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="toolbar-section">
+            <div class="view-switcher" id="viewSwitcher">
+                <button class="view-btn active" data-view="card">📇 卡片</button>
+                <button class="view-btn" data-view="table">📊 表格</button>
+            </div>
+            <button id="achievementsGuideBtn" class="btn btn-secondary">
+                <span>🏆</span> 成就指南
+            </button>
+            <button id="checkBtn" class="btn btn-primary">
+                <span>🔄</span> 检查更新
+            </button>
+            <button id="exportCsvBtn" class="btn btn-secondary">
+                <span>📊</span> 导出CSV
+            </button>
+        </div>
+        <div class="toolbar-section">
+            <div class="toggle-wrapper">
+                <span>仅显示已更新</span>
+                <div class="toggle" id="updatedOnlyToggle">
+                    <div class="toggle-thumb"></div>
+                </div>
+            </div>
+            <span style="font-size: 12px; color: var(--qg-text-dim);">
+                自动刷新: <strong id="refreshLabel" style="color: var(--qg-cyan);">60</strong>s
+            </span>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="card">
+            <div class="card-header">📋 学员作业列表</div>
+            <div class="card-body">
+                <div class="view-container">
+                    <div class="view-wrapper" id="viewWrapper">
+                        <div class="students-grid" id="cardView"></div>
+                        <div class="table-view" id="tableView">
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>姓名</th>
+                                            <th>状态</th>
+                                            <th>最后更新</th>
+                                            <th>最后查看</th>
+                                            <th>提交数</th>
+                                            <th>阶段1</th>
+                                            <th>阶段2</th>
+                                            <th>阶段3</th>
+                                            <th>阶段4</th>
+                                            <th>阶段5</th>
+                                            <th>平均分</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card sidebar-card">
+                <div class="card-header">👤 学员管理</div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="form-label">姓名</label>
+                        <input type="text" class="form-input" id="studentName" placeholder="张三">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">仓库</label>
+                        <input type="url" class="form-input" id="studentRepo" placeholder="https://github.com/user/repo">
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="saveStudentBtn" class="btn btn-primary" style="flex: 1;">新增学员</button>
+                        <button id="cancelEditBtn" class="btn btn-ghost" style="display: none;">取消</button>
+                    </div>
+                    <div id="studentStatus" class="status-msg"></div>
+                </div>
+            </div>
+
+            <div class="card sidebar-card">
+                <div class="card-header">📥 批量导入</div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="form-label">数据</label>
+                        <textarea class="form-textarea" id="importText" placeholder="姓名,链接&#10;或直接粘贴链接"></textarea>
+                        <div class="form-hint">支持逗号/空格/Tab分隔</div>
+                    </div>
+                    <button id="importBtn" class="btn btn-success" style="width: 100%;">导入</button>
+                    <div id="importStatus" class="status-msg"></div>
+                </div>
+            </div>
+
+            <div class="card sidebar-card">
+                <div class="card-header">⚙️ 设置</div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="form-label">前端刷新(秒)</label>
+                        <input type="number" class="form-input" id="clientRefresh" min="5" max="3600" value="60">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">后台检查(秒)</label>
+                        <input type="number" class="form-input" id="serverPoll" min="5" max="3600" value="300">
+                    </div>
+                    <button id="saveSettingsBtn" class="btn btn-primary" style="width: 100%;">保存设置</button>
+                    <div id="settingsStatus" class="status-msg"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="achievements-guide-panel" id="achievementsGuidePanel">
+    <div class="guide-content">
+        <div class="guide-header">
+            <h2>🏆 成就系统指南</h2>
+            <button class="guide-close-btn" id="closeGuideBtn">✕</button>
+        </div>
+        <div class="guide-body">
+            <div class="achievement-category">
+                <h3>⚪ 入门级成就（非常容易）</h3>
+                <div class="achievement-list">
+                    <div class="achievement-item badge-common">
+                        <span class="achievement-icon">🎉</span>
+                        <div class="achievement-info">
+                            <strong>初来乍到</strong>
+                            <p>完成第一个阶段（有分数即可）</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-common">
+                        <span class="achievement-icon">📝</span>
+                        <div class="achievement-info">
+                            <strong>踏实前行</strong>
+                            <p>完成2个阶段</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-common">
+                        <span class="achievement-icon">🌱</span>
+                        <div class="achievement-info">
+                            <strong>成长中</strong>
+                            <p>完成3个阶段</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-common">
+                        <span class="achievement-icon">🚶</span>
+                        <div class="achievement-info">
+                            <strong>稳步推进</strong>
+                            <p>完成4个阶段</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-common">
+                        <span class="achievement-icon">📊</span>
+                        <div class="achievement-info">
+                            <strong>及格万岁</strong>
+                            <p>平均分≥60</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-common">
+                        <span class="achievement-icon">💪</span>
+                        <div class="achievement-info">
+                            <strong>努力者</strong>
+                            <p>提交数≥10次</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-common">
+                        <span class="achievement-icon">⚡</span>
+                        <div class="achievement-info">
+                            <strong>初露锋芒</strong>
+                            <p>提交数≥30次</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-common">
+                        <span class="achievement-icon">🔰</span>
+                        <div class="achievement-info">
+                            <strong>新手之光</strong>
+                            <p>第一阶段≥85分</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-common">
+                        <span class="achievement-icon">📖</span>
+                        <div class="achievement-info">
+                            <strong>良好</strong>
+                            <p>平均分≥70分</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="achievement-category">
+                <h3>💙 稀有级成就（容易）</h3>
+                <div class="achievement-list">
+                    <div class="achievement-item badge-rare">
+                        <span class="achievement-icon">💯</span>
+                        <div class="achievement-info">
+                            <strong>任务达人</strong>
+                            <p>完成全部5个阶段</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-rare">
+                        <span class="achievement-icon">✏️</span>
+                        <div class="achievement-info">
+                            <strong>优等生</strong>
+                            <p>平均分≥80分</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-rare">
+                        <span class="achievement-icon">🔥</span>
+                        <div class="achievement-info">
+                            <strong>勤奋者</strong>
+                            <p>提交数≥50次</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-rare">
+                        <span class="achievement-icon">🎯</span>
+                        <div class="achievement-info">
+                            <strong>单项冠军</strong>
+                            <p>1个阶段满分</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-rare">
+                        <span class="achievement-icon">🌟</span>
+                        <div class="achievement-info">
+                            <strong>双冠王</strong>
+                            <p>2个阶段满分</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-rare">
+                        <span class="achievement-icon">🚀</span>
+                        <div class="achievement-info">
+                            <strong>全能战士</strong>
+                            <p>所有阶段≥60分（全部及格）</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-rare">
+                        <span class="achievement-icon">💪</span>
+                        <div class="achievement-info">
+                            <strong>勤奋之星</strong>
+                            <p>提交数≥100次</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-rare">
+                        <span class="achievement-icon">🌈</span>
+                        <div class="achievement-info">
+                            <strong>进步之星</strong>
+                            <p>后半段比前半段进步10分以上</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-rare">
+                        <span class="achievement-icon">💫</span>
+                        <div class="achievement-info">
+                            <strong>冲刺王</strong>
+                            <p>最后阶段分数最高且≥85</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-rare">
+                        <span class="achievement-icon">🎖️</span>
+                        <div class="achievement-info">
+                            <strong>稳定发挥</strong>
+                            <p>五个阶段分数波动小且均分≥75</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="achievement-category">
+                <h3>💜 史诗级成就（较难）</h3>
+                <div class="achievement-list">
+                    <div class="achievement-item badge-epic">
+                        <span class="achievement-icon">📚</span>
+                        <div class="achievement-info">
+                            <strong>学霸</strong>
+                            <p>平均分≥90分</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-epic">
+                        <span class="achievement-icon">💎</span>
+                        <div class="achievement-info">
+                            <strong>精益求精</strong>
+                            <p>所有阶段分数≥85</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-epic">
+                        <span class="achievement-icon">🔥</span>
+                        <div class="achievement-info">
+                            <strong>超级肝帝</strong>
+                            <p>提交数≥200次</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-epic">
+                        <span class="achievement-icon">⭐</span>
+                        <div class="achievement-info">
+                            <strong>高效新星</strong>
+                            <p>提交数10-40次但平均分≥85（少而精）</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-epic">
+                        <span class="achievement-icon">🎯</span>
+                        <div class="achievement-info">
+                            <strong>三冠王</strong>
+                            <p>3个阶段满分</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-epic">
+                        <span class="achievement-icon">🎯</span>
+                        <div class="achievement-info">
+                            <strong>四冠王</strong>
+                            <p>4个阶段满分</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="achievement-category">
+                <h3>🌟 传奇级成就（最难）</h3>
+                <div class="achievement-list">
+                    <div class="achievement-item badge-legendary">
+                        <span class="achievement-icon">🏆</span>
+                        <div class="achievement-info">
+                            <strong>完美主义者</strong>
+                            <p>所有阶段满分（5个阶段都是100分）</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-legendary">
+                        <span class="achievement-icon">🌟</span>
+                        <div class="achievement-info">
+                            <strong>神级学霸</strong>
+                            <p>平均分≥95分</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-legendary">
+                        <span class="achievement-icon">🎨</span>
+                        <div class="achievement-info">
+                            <strong>代码艺术家</strong>
+                            <p>提交数≥80且平均分≥85（量质兼优）</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-legendary">
+                        <span class="achievement-icon">🎓</span>
+                        <div class="achievement-info">
+                            <strong>学习榜样</strong>
+                            <p>平均分≥90且提交数≥50（成绩优异+勤奋）</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="achievement-category">
+                <h3>❤️ 特殊成就（彩蛋）</h3>
+                <div class="achievement-list">
+                    <div class="achievement-item badge-special">
+                        <span class="achievement-icon">🦉</span>
+                        <div class="achievement-info">
+                            <strong>夜猫子</strong>
+                            <p>凌晨2-5点提交过代码</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-special">
+                        <span class="achievement-icon">🌠</span>
+                        <div class="achievement-info">
+                            <strong>早起鸟</strong>
+                            <p>早上6-8点提交过代码</p>
+                        </div>
+                    </div>
+                    <div class="achievement-item badge-special">
+                        <span class="achievement-icon">🎁</span>
+                        <div class="achievement-info">
+                            <strong>幸运儿</strong>
+                            <p>总分正好是特殊数字（250/300/350/400/450/500）</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-tips">
+                <h4>💡 小提示</h4>
+                <ul>
+                    <li>成就会根据你的学习进度自动解锁</li>
+                    <li>鼠标悬停在成就徽章上可以查看详细说明</li>
+                    <li>成就难度：传奇（最难）> 史诗（较难）> 稀有（容易）> 普通（非常容易）</li>
+                    <li>特殊成就是隐藏彩蛋，达成条件比较特殊</li>
+                    <li>持续学习和提交代码可以解锁更多成就</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">
+    <span class="toast-icon">✓</span>
+    <span class="toast-message"></span>
+</div>
+
+<script src="/static/js/app.js"></script>
+<script>
+// 确保 DOM 加载完成后初始化
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof init === 'function') {
+            init();
+        }
+    });
+} else {
+    if (typeof init === 'function') {
+        init();
+    }
+}
+
+// 检查静态资源
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        const hint = document.getElementById('staticMissingHint');
+        const hasCSS = document.querySelector('link[href*="/static/css/styles.css"]');
+        const hasJS = typeof init === 'function';
+        if (!hasCSS || !hasJS) {
+            if (hint) hint.style.display = 'block';
+        }
+    }, 800);
+});
+</script>
+</body>
+</html>
+
