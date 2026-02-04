@@ -30,7 +30,7 @@ except Exception:
 
 if __name__ == "__main__":
     host = os.environ.get('FLASK_RUN_HOST', '127.0.0.1')
-    port = int(os.environ.get('FLASK_RUN_PORT', '5000'))
+    port = int(os.environ.get('FLASK_RUN_PORT', '5001'))
     debug_env = os.environ.get('FLASK_DEBUG', '')
     debug = debug_env.lower() in ('1', 'true', 'yes')
     print(f"Starting server on {host}:{port} (debug={debug})")

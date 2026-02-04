@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>排行榜 - QG AI 训练营</title>
+
+    <script>
+        (function(){
+            try {
+                var saved = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-theme', saved);
+            } catch (e) { /* ignore */ }
+        })();
+    </script>
+
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/leaderboard.css">
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <div class="header-content">
+            <div class="brand">
+                <div class="brand-logo">🏆</div>
+                <div class="brand-text">
+                    <h1>学员排行榜</h1>
+                    <div class="subtitle">STUDENT LEADERBOARD</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-ghost" onclick="window.location.href='/'">
+                    ← 返回主页
+                </button>
+                <div class="theme-toggle" id="themeToggle">
+                    <span class="theme-icon">☀️</span>
+                    <span class="theme-text">明亮模式</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="leaderboard-controls">
+        <div class="control-group search-group">
+            <div class="search-container">
+                <input type="text"
+                       id="searchInput"
+                       class="search-input"
+                       placeholder="🔍 搜索学员..."
+                       oninput="handleSearch(event)">
+                <button class="search-clear-btn" onclick="clearSearch()" style="display: none;">✕</button>
+            </div>
+            <div id="searchResult" class="search-result" style="display: none;"></div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">排序依据：</label>
+            <div class="sort-buttons">
+                <button class="sort-btn active" data-sort="avg_score">
+                    ⭐ 平均分
+                </button>
+                <button class="sort-btn" data-sort="total_score">
+                    📊 总分
+                </button>
+                <button class="sort-btn" data-sort="commits_count">
+                    🔥 提交数
+                </button>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" id="refreshBtn">
+            <span>🔄</span> 刷新排名
+        </button>
+    </div>
+
+    <div class="leaderboard-stats">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-content">
+                <div class="stat-label">参与学员</div>
+                <div class="stat-value" id="totalStudents">0</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🌟</div>
+            <div class="stat-content">
+                <div class="stat-label">平均得分</div>
+                <div class="stat-value" id="avgClassScore">0</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-content">
+                <div class="stat-label">总提交数</div>
+                <div class="stat-value" id="totalCommits">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="podium">
+        <div class="podium-place second" id="rank2">
+            <div class="podium-rank">2</div>
+            <div class="podium-medal">🥈</div>
+            <div class="podium-avatar">👤</div>
+            <div class="podium-name">-</div>
+            <div class="podium-stats">
+                <div class="podium-stat-item">
+                    <div class="podium-stat-label">得分</div>
+                    <div class="podium-score">0</div>
+                </div>
+                <div class="podium-stat-item">
+                    <div class="podium-stat-label">提交</div>
+                    <div class="podium-commits">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="podium-place first" id="rank1">
+            <div class="podium-rank">1</div>
+            <div class="podium-medal">🥇</div>
+            <div class="podium-avatar">👑</div>
+            <div class="podium-name">-</div>
+            <div class="podium-stats">
+                <div class="podium-stat-item">
+                    <div class="podium-stat-label">得分</div>
+                    <div class="podium-score">0</div>
+                </div>
+                <div class="podium-stat-item">
+                    <div class="podium-stat-label">提交</div>
+                    <div class="podium-commits">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="podium-place third" id="rank3">
+            <div class="podium-rank">3</div>
+            <div class="podium-medal">🥉</div>
+            <div class="podium-avatar">👤</div>
+            <div class="podium-name">-</div>
+            <div class="podium-stats">
+                <div class="podium-stat-item">
+                    <div class="podium-stat-label">得分</div>
+                    <div class="podium-score">0</div>
+                </div>
+                <div class="podium-stat-item">
+                    <div class="podium-stat-label">提交</div>
+                    <div class="podium-commits">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card leaderboard-card">
+        <div class="card-header">
+            <span>📋 完整排名</span>
+            <span class="sort-info" id="sortInfo">按平均分排序</span>
+        </div>
+        <div class="card-body">
+            <div class="leaderboard-table-container">
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th class="rank-col">排名</th>
+                            <th class="name-col">姓名</th>
+                            <th>阶段1</th>
+                            <th>阶段2</th>
+                            <th>阶段3</th>
+                            <th>阶段4</th>
+                            <th>阶段5</th>
+                            <th>总分</th>
+                            <th>平均分</th>
+                            <th>提交数</th>
+                            <th>仓库</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                        <tr>
+                            <td colspan="11" class="loading-cell">
+                                <div class="loading">
+                                    <div class="spinner"></div>
+                                    <span>加载中...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/leaderboard.js"></script>
+</body>
+</html>

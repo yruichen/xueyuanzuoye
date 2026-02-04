@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置 - QG AI 训练营</title>
+
+    <script>
+        (function(){
+            try {
+                var saved = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-theme', saved);
+            } catch (e) { /* ignore */ }
+        })();
+    </script>
+
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/settings.css">
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <div class="header-content">
+            <div class="brand">
+                <div class="brand-logo">⚙️</div>
+                <div class="brand-text">
+                    <h1>系统设置</h1>
+                    <div class="subtitle">SYSTEM SETTINGS</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-ghost" onclick="window.location.href='/'">
+                    ← 返回主页
+                </button>
+                <div class="theme-toggle" id="themeToggle">
+                    <span class="theme-icon">☀️</span>
+                    <span class="theme-text">明亮模式</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="settings-container">
+        <div class="settings-section">
+            <div class="section-header">
+                <div class="section-icon">🔄</div>
+                <div>
+                    <h2>刷新设置</h2>
+                    <p>控制系统自动刷新和检查的频率</p>
+                </div>
+            </div>
+            <div class="settings-grid">
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <span class="label-text">前端自动刷新间隔</span>
+                        <span class="label-desc">页面自动刷新数据的时间间隔（秒）</span>
+                    </label>
+                    <div class="input-with-unit">
+                        <input type="number" id="clientRefresh" class="setting-input" min="5" max="3600" value="60">
+                        <span class="unit">秒</span>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <span class="label-text">后台检查间隔</span>
+                        <span class="label-desc">服务器后台检查更新的时间间隔（秒）</span>
+                    </label>
+                    <div class="input-with-unit">
+                        <input type="number" id="serverPoll" class="setting-input" min="5" max="3600" value="300">
+                        <span class="unit">秒</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="section-header">
+                <div class="section-icon">👨‍🏫</div>
+                <div>
+                    <h2>导师信息</h2>
+                    <p>设置导师个人信息和偏好</p>
+                </div>
+            </div>
+            <div class="settings-grid">
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <span class="label-text">导师姓名</span>
+                        <span class="label-desc">您的姓名</span>
+                    </label>
+                    <input type="text" id="instructorName" class="setting-input" placeholder="请输入您的姓名">
+                </div>
+
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <span class="label-text">导师邮箱</span>
+                        <span class="label-desc">用于接收通知的邮箱地址</span>
+                    </label>
+                    <input type="email" id="instructorEmail" class="setting-input" placeholder="your@email.com">
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="section-header">
+                <div class="section-icon">🔔</div>
+                <div>
+                    <h2>通知设置</h2>
+                    <p>管理系统通知偏好</p>
+                </div>
+            </div>
+            <div class="settings-grid">
+                <div class="setting-item toggle-item">
+                    <label class="setting-label">
+                        <span class="label-text">更新提醒</span>
+                        <span class="label-desc">学员提交更新时显示提醒</span>
+                    </label>
+                    <div class="toggle" id="notifyUpdates">
+                        <div class="toggle-thumb"></div>
+                    </div>
+                </div>
+
+                <div class="setting-item toggle-item">
+                    <label class="setting-label">
+                        <span class="label-text">声音提示</span>
+                        <span class="label-desc">更新时播放提示音</span>
+                    </label>
+                    <div class="toggle" id="soundEnabled">
+                        <div class="toggle-thumb"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="section-header">
+                <div class="section-icon">🎨</div>
+                <div>
+                    <h2>显示设置</h2>
+                    <p>自定义界面显示选项</p>
+                </div>
+            </div>
+            <div class="settings-grid">
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <span class="label-text">默认视图</span>
+                        <span class="label-desc">启动时默认显示的视图</span>
+                    </label>
+                    <select id="defaultView" class="setting-input">
+                        <option value="card">卡片视图</option>
+                        <option value="table">表格视图</option>
+                    </select>
+                </div>
+
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <span class="label-text">每页显示数量</span>
+                        <span class="label-desc">表格视图每页显示的学员数量</span>
+                    </label>
+                    <select id="itemsPerPage" class="setting-input">
+                        <option value="10">10条/页</option>
+                        <option value="20">20条/页</option>
+                        <option value="50">50条/页</option>
+                        <option value="100">100条/页</option>
+                    </select>
+                </div>
+
+                <div class="setting-item toggle-item">
+                    <label class="setting-label">
+                        <span class="label-text">显示已查看学员</span>
+                        <span class="label-desc">在列表中显示已查看的学员</span>
+                    </label>
+                    <div class="toggle active" id="showViewedStudents">
+                        <div class="toggle-thumb"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="section-header">
+                <div class="section-icon">🔐</div>
+                <div>
+                    <h2>GitHub设置</h2>
+                    <p>配置GitHub API访问</p>
+                </div>
+            </div>
+            <div class="settings-grid">
+                <div class="setting-item full-width">
+                    <label class="setting-label">
+                        <span class="label-text">GitHub Token</span>
+                        <span class="label-desc">用于提高API请求限制（可选）</span>
+                    </label>
+                    <input type="password" id="githubToken" class="setting-input" placeholder="ghp_xxxxxxxxxxxx">
+                    <div class="setting-hint">
+                        ⚠️ Token仅保存在本地浏览器，不会上传到服务器
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-actions">
+            <button class="btn btn-primary btn-lg" id="saveAllSettings">
+                <span>💾</span> 保存所有设置
+            </button>
+            <button class="btn btn-ghost btn-lg" id="resetSettings">
+                <span>↺</span> 恢复默认
+            </button>
+        </div>
+
+        <div id="settingsStatus" class="status-msg"></div>
+    </div>
+</div>
+
+<script src="/static/js/settings.js"></script>
+</body>
+</html>

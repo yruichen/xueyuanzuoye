@@ -1,60 +1,46 @@
-# 学员作业监控（README）
+# 学员作业监控（QG AI 训练营）
 
-这是一个小型的 Flask 仪表盘项目，用来监控学员的 GitHub 仓库并高亮显示自上次查看以来的更新。
+这是一个基于 Flask 的小型仪表盘，用于监控学员的 GitHub 仓库、展示分数与提交情况，并支持导师备注与成就系统。
 
-本文档（中文）说明如何准备环境并正确启动服务器，以及常见的运行/重构步骤说明。
+## 功能概览
+- 学员列表（卡片 / 表格视图切换）
+- 成就（Badges）自动计算并展示
+- 学员详情透视：提交时间轴、提交频率、分数趋势、导师备注
+- 导入/导出学员数据（CSV）
+- 后台定期抓取仓库提交信息（可配置）
 
----
+## 目录结构（常见）
+- `src/xueyuanzuoye/stu_homework.py`：后端主程序
+- `src/xueyuanzuoye/static/`：前端静态资源（HTML / CSS / JS）
+- `students.json`、`state.json`：数据文件（可放在 repo 根或 `data/`）
+- `scripts/run_server.py`：启动脚本（兼容重构前后结构）
 
-## 先决条件
+## 运行环境
+- Python 3.10+
+- 建议使用虚拟环境
 
-- Python 3.10 或更高版本
-- 建议使用虚拟环境来隔离依赖
-
-项目根目录结构（简要）:
-
-- `stu_homework.py`：应用主逻辑（将来可能位于包内 `src/xueyuanzuoye/`）
-- `static/`、`templates/`：前端静态文件和模板
-- `students.json`、`state.json`：学员数据与运行时状态（可移动到 `data/`）
-- `tools/`：开发/调试脚本（可能包含若干 helper）
-- `scripts/run_server.py`：启动脚本（现在已提供，兼容重构前/后布局）
-
----
-
-## 快速启动（推荐）
-
-下面的步骤在 macOS zsh 环境下可直接复制执行。
-
-1) 创建并激活虚拟环境：
+安装依赖（示例）：
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-```
-
-2) 安装依赖：
-
-```bash
 pip install -r requirements.txt
 ```
 
-3) 启动服务器（使用项目内的启动器，兼容重构前后）：
+## 启动（开发）
+使用项目自带启动器：
 
 ```bash
 python3 scripts/run_server.py
 ```
 
-默认行为：
-- 地址：`127.0.0.1`（可通过环境变量修改）
-- 端口：`5000`（可通过环境变量修改）
+可通过环境变量调整：
+- `FLASK_RUN_HOST`（默认 `127.0.0.1`）
+- `FLASK_RUN_PORT`（默认 `5001`）
+- `FLASK_DEBUG`（`1`/`true`/`yes` 开启 debug）
+- `GITHUB_TOKEN`（可选，提升 GitHub API 配额）
 
-可用环境变量：
-- `FLASK_RUN_HOST`：设置监听地址（例如 `0.0.0.0`）
-- `FLASK_RUN_PORT`：设置端口（例如 `5001`）
-- `FLASK_DEBUG`：启用 debug（`1`/`true`/`yes`）
-- `GITHUB_TOKEN`：可选，设置 GitHub token 以提高 API 访问配额
-
-例如在 5001 端口启动并开启 debug：
+示例：
 
 ```bash
 export FLASK_RUN_PORT=5001
@@ -62,68 +48,38 @@ export FLASK_DEBUG=1
 python3 scripts/run_server.py
 ```
 
-然后在浏览器打开：
+访问：`http://localhost:5001/`
 
-```
-http://localhost:5001/
-```
+## 配置与数据文件
+- `students.json`：学员列表；支持两种格式：直接数组或 `{ "students": [...] }`。
+- `state.json`：运行时保存的每学员抓取信息（last_known_pushed_at、last_viewed_at、commits_count 等）
+- `settings.json`：可配置项（轮询间隔、前端刷新等），首次不存在会使用默认设置。
 
----
+注意：生产部署时请把数据文件放在持久化目录（如 `data/`），并保证读写权限。
 
-## 如果你要重构项目布局（可选）
+## 常见操作
+- 添加/编辑学员：右侧管理面板
+- 批量导入：粘贴 `姓名, 仓库` 或每行一个链接
+- 导出 CSV：顶部工具栏导出当前学员数据
+- 查看详情：点击学员卡片打开详情模态框（包含提交时间轴与备注）
 
-仓库中已经包含一个安全的重构脚本 `tools/restructure.py`，它会把若干开发/调试文件归档到更合理的位置，并在移动任何东西之前创建带时间戳的备份。
-
-使用方法（强烈建议先做 git 提交以保留当前状态）：
-
-```bash
-# 保存当前状态
-git add -A
-git commit -m "chore: checkpoint before restructure"
-
-# 查看将要执行的操作（干跑）
-python3 tools/restructure.py --dry-run
-
-# 如果输出看起来正确，执行实际迁移（会提示确认）
-python3 tools/restructure.py
-
-# 非交互模式（跳过确认）
-python3 tools/restructure.py --yes
-```
-
-重构脚本会把被移动的原文件复制到 `backups/<timestamp>/` 里，迁移后如需恢复可以手动从该目录复制回原位置。
+## 维护建议
+- 重要改动前请先 git 提交（`git add -A && git commit -m "checkpoint"`）
+- 若要重构目录，使用 `tools/restructure.py`（会生成备份）
+- 若需提高 GitHub API 限额，请设置 `GITHUB_TOKEN` 环境变量
 
 ---
 
-## 数据文件（students/state）说明
+## 更新日志（CHANGELOG）
+- v0.0.1 — 初始稳定版本
+  - 基本的学员列表 / 分数管理 / 导入导出功能
+  - 后台抓取仓库信息与提交计数
+  - 成就系统基础实现
 
-- `students.json`：学员列表，通常格式如下：
+- v0.0.2 — 改进（本次）
+  - 移除后端运行时的调试打印输出，减少控制台噪音，生产/部署更干净
+  - 修复并完善学员详情模态框的数据结构返回（包含提交历史、提交频率、分数趋势、导师备注）
+  - README 重写，补充运行说明与 CHANGELOG
+  - 前端交互优化（模态框、成就展示、tooltip 行为等）——参见前端静态文件变更记录
 
-```json
-{
-  "students": [
-    { "name": "张三", "repo": "https://github.com/user/repo" }
-  ]
-}
-```
-
-- `state.json`：运行时保存的每个学员上次查看/上次更新时间信息。请在生产部署时把这些运行时状态放到 `data/` 或其它持久化位置（不要随意把临时状态覆盖）。
-
----
-
-## 排错（常见问题）
-
-- 端口被占用：更改 `FLASK_RUN_PORT`，或停止占用进程（`lsof -i :5000`）
-- 无法导入 `stu_homework`：如果你已经运行过重构，确保使用 `python3 scripts/run_server.py`（它会尝试多种导入方式）。
-- 权限问题：确保运行用户对 `students.json`/`state.json` 有读写权限。
-
----
-
-## 其他建议
-
-- 在进行大改动前请先提交代码（git commit）。
-- 若打算将项目打包/发布，建议采用 `src/` 布局并在 `pyproject.toml` 中配置包查找（脚本 `tools/restructure.py` 已为你提供了建议）。
-
----
-
-如果你希望我直接执行重构（用 `tools/restructure.py` 实际移动文件并修正 `stu_homework.py` 中的数据路径），我可以继续执行：请回复“现在执行重构”或告诉我你想保留的具体布局选项（例如 `src/` 布局或保留顶层模块）。
+如果需要我把 README 中的示例命令改为更具体的部署说明（如 systemd 配置、Dockerfile、supervisor 等），请说明偏好，我会继续补充。

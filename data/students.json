@@ -1,8 +1,459 @@
 {
   "students": [
     {
-      "name": "测试用户",
-      "repo": "https://github.com/example/repo",
+      "name": "郑如放",
+      "repo": "https://github.com/AgathaDoyle/QG-Winter-Vacation-Training-Camp",
+      "scores": [
+        80,
+        80,
+        80,
+        80,
+        0
+      ]
+    },
+    {
+      "name": "杜银珊",
+      "repo": "https://github.com/D-yins-D/learning",
+      "scores": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ]
+    },
+    {
+      "name": "李灿峰",
+      "repo": "https://github.com/Nebula20277/LCFQG",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "潘俊泽",
+      "repo": "https://github.com/JiangLi552/test",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "余昊然",
+      "repo": "https://github.com/nanyan81/QGAI-",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "王梓茵",
+      "repo": "https://github.com/zywongher/zywongher.git",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "白克益",
+      "repo": "https://github.com/y2000-1/yi.git",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "李世涵",
+      "repo": "https://github.com/HankLi666/QG",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "卿子懿",
+      "repo": "https://github.com/COUNTQ11/Code-and-notes-of-the-QG-Studio-AI-Group-Winter-Training-Camp.git",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "汤文博",
+      "repo": "https://github.com/TWB0703/QGcode",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "张丹",
+      "repo": "https://github.com/Mmvll/QG.git",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "庄坤达",
+      "repo": "https://github.com/Fragrance14Hui/2.3homework",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "邓婕婧",
+      "repo": "https://github.com/DJdarkstorm1/QG_AI.git",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "文泓发",
+      "repo": "https://github.com/joker1point/note.git",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "蔡家豪",
+      "repo": "https://github.com/chfex/repository1",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "冯润松",
+      "repo": "https://github.com/Feng-runsong/Note.git",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "赖昌健",
+      "repo": "https://github.com/SHEN-LAI/training-camp",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "刘冠德",
+      "repo": "https://github.com/soul-hash/-.git",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "罗振坚",
+      "repo": "https://github.com/Embraself/QG-2026-Winter-Training.git",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "丘一君",
+      "repo": "https://github.com/f4ghkgsr/QG-Winter-Camp-Homework",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "叶思怿",
+      "repo": "https://github.com/Armweak-Ye/Python_Study",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "张致远",
+      "repo": "https://github.com/FengGJSNW/QGstudy-AI",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "周梓澳",
+      "repo": "https://github.com/anewdayonnnonnn/winterhoildayaixly",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "袁睿",
+      "repo": "https://github.com/my-Bai/Winter-holiday-training-camp",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "陈泳锦",
+      "repo": "https://github.com/linyuan567m/ai-1.git",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "龚洙琳",
+      "repo": "https://github.com/GGQ3Q/python",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "廖柏翔",
+      "repo": "https://github.com/hiAhi233/note",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "沈沛霖",
+      "repo": "https://github.com/ChipByt/QG2026-winter-camp.git",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "王哲",
+      "repo": "https://github.com/flycat972/jackson.git",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "谢采如",
+      "repo": "https://github.com/Cherie-X/Xie.git",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "叶鑫浩",
+      "repo": "https://github.com/2959309322/QG#",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "姚晨",
+      "repo": "https://github.com/YCDR-810518/LearningNoteBookInWinter",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "赵崇杰",
+      "repo": "https://github.com/zzk7908441/Winter-Vacation-Training-Camp-Codes-and-Notes",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "范俊明",
+      "repo": "https://github.com/fjm798/hanjiaxunlianying",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "黄熙晨",
+      "repo": "https://github.com/lifelong-learninghxc/-Sprint-To-QG-Studio.git",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "李俊杰",
+      "repo": "https://github.com/lijunjie31254282/code-and-note",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "林观鑫",
+      "repo": "https://github.com/lin-guan-xin/test",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "苏芷兰",
+      "repo": "https://github.com/wpuq-alt/wpuq.git",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "杨与齐",
+      "repo": "https://github.com/yangyuqi520/xxryyq",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "郑壕煜",
+      "repo": "https://github.com/baixiaoshengpro/-001",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "邹家仪",
+      "repo": "https://github.com/fxmtfxmt/ai-camp.git",
+      "scores": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "陈绮旋",
+      "repo": "https://github.com/qi7-insist/7-.git",
       "scores": [
         0,
         0,
